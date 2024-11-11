@@ -1,0 +1,4 @@
+.env
+venv
+dlt
+data_fetch.csv
