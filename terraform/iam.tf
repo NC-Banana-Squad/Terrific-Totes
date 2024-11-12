@@ -184,7 +184,7 @@ resource "aws_sns_topic_subscription" "sre_email_subscription" {
 #Created metric filter for "ERROR" in cw logs.
 resource "aws_cloudwatch_log_metric_filter" "error_filter" {
   name           = "MyAppAccessCount"
-  pattern        = "ERROR"
+  pattern        = "\"ERROR\""
   log_group_name = aws_cloudwatch_log_group.log_group.name
 
   metric_transformation {
