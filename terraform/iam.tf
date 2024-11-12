@@ -132,6 +132,9 @@ resource "aws_cloudwatch_log_group" "log_group" {
   }
 }
 
+
+#IAM policy for the SNS emails. Adds the policy to the role. Allows start and get queries
+
 resource "aws_iam_role_policy" "sns_policy" {
   name = "sns-publish"
   role = aws_iam_role.lambda_role.name
@@ -165,10 +168,12 @@ resource "aws_iam_role_policy" "sns_policy" {
   })
 }
 
+#Creates an SNS alert topic.
 resource "aws_sns_topic" "alert_sre" {
   name = "alert-sre"
 }
 
+#Creates an SNS subscription to allow emails to be sent to given email address
 resource "aws_sns_topic_subscription" "sre_email_subscription" {
   topic_arn = aws_sns_topic.alert_sre.arn
   protocol  = "email"
@@ -176,6 +181,7 @@ resource "aws_sns_topic_subscription" "sre_email_subscription" {
 }
 
 
+#Created metric filter for "ERROR" in cw logs.
 resource "aws_cloudwatch_log_metric_filter" "error_filter" {
   name           = "MyAppAccessCount"
   pattern        = "ERROR"
@@ -188,7 +194,7 @@ resource "aws_cloudwatch_log_metric_filter" "error_filter" {
   }
 }
 
-
+#Uses metric_filter to create cloudwatch alarm. Runs once every 2 mins for now.
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "extract_email_notifications"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -205,6 +211,7 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   ]
 }
 
+#IAM policy allows for listing all buckets and putting objects.
 data "aws_iam_policy_document" "s3_document" {
   statement {
 
