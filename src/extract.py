@@ -102,7 +102,7 @@ def continuous_extract():
     table_name = [name for name in query]
 
     for table in table_name:
-        query = conn.run('SELECT created_at FROM sales_order WHERE created_at >')
+        query = conn.run(f'SELECT created_at FROM {table} WHERE created_at > {readable_content}')
 
 # time = datetime.now().isoformat().replace('T',' ')
 # print(time)
