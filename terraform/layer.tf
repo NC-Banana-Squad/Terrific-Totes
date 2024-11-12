@@ -1,10 +1,10 @@
 resource "null_resource" "create_dependencies" {
     # Install Python dependencies listed in a requirements.txt
   provisioner "local-exec" {
-    command = "pip install -r ${path.module}/../requirements.txt -t ${path.module}/../layer/python"
+    command = "pip install -r ${path.module}/../extract_layer_requirements.txt -t ${path.module}/../layer/python"
   }
   triggers = {
-    dependencies = filemd5("${path.module}/../requirements.txt")
+    dependencies = filemd5("${path.module}/../extract_layer_requirements.txt")
   }
 }
 
