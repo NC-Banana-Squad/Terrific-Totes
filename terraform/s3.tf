@@ -21,8 +21,8 @@ resource "aws_s3_bucket" "code_bucket" {
 
 resource "aws_s3_object" "lambda_code" {
   bucket = aws_s3_bucket.code_bucket.bucket
-  key    = "lambda_code"
-  source = "lambda.tf"
+  key    = "function.zip"
+  source = "${path.module}/../src/extract.py"
 }
 
 

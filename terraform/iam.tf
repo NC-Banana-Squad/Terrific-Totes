@@ -172,7 +172,37 @@ resource "aws_sns_topic" "alert_sre" {
 resource "aws_sns_topic_subscription" "sre_email_subscription" {
   topic_arn = aws_sns_topic.alert_sre.arn
   protocol  = "email"
-  endpoint  = "your.email@domain.com"
+  endpoint  = "ciarankyle@gmail.com"
+}
+
+
+resource "aws_cloudwatch_log_metric_filter" "error_filter" {
+  name           = "MyAppAccessCount"
+  pattern        = "ERROR"
+  log_group_name = aws_cloudwatch_log_group.log_group.name
+
+  metric_transformation {
+    name      = "EventCount"
+    namespace = "applicationErrors"
+    value     = "1"
+  }
+}
+
+
+resource "aws_cloudwatch_metric_alarm" "foobar" {
+  alarm_name                = "extract_email_notifications"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = 1
+  metric_name               = aws_cloudwatch_log_metric_filter.error_filter.metric_transformation[0].name
+  namespace                 = aws_cloudwatch_log_metric_filter.error_filter.metric_transformation[0].namespace
+  period                    = 120
+  statistic                 = "Sum"
+  threshold                 = 1
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+
+  alarm_actions = [
+    aws_sns_topic.alert_sre.arn
+  ]
 }
 
 data "aws_iam_policy_document" "s3_document" {
