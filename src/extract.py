@@ -1,13 +1,14 @@
+from datetime import datetime
+from pprint import pprint
 from pg8000.native import Connection
+from util_functions import connect, create_s3_client
+import boto3
+import csv
 import dotenv
 import os
-from datetime import datetime
-import logging
-import boto3
-from pprint import pprint
-import csv
 import io
 
+bucket_name = 'banana-squad-code'
 
 def connect():
     dotenv.load_dotenv()
@@ -27,25 +28,38 @@ def connect():
         port=port
     )
 
+def create_s3_client():
+    return boto3.client('s3')
 
-# def fetch():
-#     conn = connect()
-#     rows = conn.run('SELECT * FROM sales_order')
-#     columns = [col['name'] for col in conn.columns]
+def create_file_name(table):
 
+    year = datetime.now().strftime('%Y')
+    month = datetime.now().strftime('%m')
+    day = datetime.now().strftime('%d')
+    time_now = datetime.now().isoformat()
 
-#     with open('data_fetch.csv', 'w', encoding='utf-8') as csv_f:
-#         writer = csv.writer(csv_f)
-#         writer.writerow(columns)
-#         writer.writerows(rows)
-    
+    file_name = f'{table}/{year}/{month}/{day}/{time_now}.csv'
 
-# fetch()
+    return file_name
 
+def format_to_csv(rows, columns):
 
+    csv_buffer = io.StringIO()
+    writer = csv.writer(csv_buffer)
+    writer.writerow(columns)
+    writer.writerows(rows)
+
+    csv_buffer.seek(0)
+
+    return csv_buffer
+
+def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
+    s3_client.put_object(Body=csv_buffer.getvalue(),
+                         Bucket=bucket_name,
+                         Key=file_name)
 
 def lambda_handler(event, context):
-    s3_client = boto3.client('s3')
+    s3_client = create_s3_client()
     if 'last_extracted.txt' in s3_client.list_objects(Bucket='banana-squad-code'):
         continuous_extract()
     else:
@@ -56,58 +70,49 @@ def lambda_handler(event, context):
                                  Bucket='banana-squad-code', 
                                  Key='last_extracted.txt')
     
-
-
 def initial_extract():    
-    s3_client = boto3.client('s3')
+    s3_client = create_s3_client()
     conn = connect()
     query = conn.run('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' AND table_name != \'_prisma_migrations\'')
-    # all_tables = conn.run('SELECT tables FROM information_')
-
-    table_name = [name for name in query]
-    year = datetime.now().strftime('%Y')
-    month = datetime.now().strftime('%m')
-    day = datetime.now().strftime('%d')
-    time_now = datetime.now().isoformat()
-    file_name = f'{table_name}/{year}/{month}/{day}/{time_now}.csv'
 
     for table in query:
+
+        file_name = create_file_name(table)
         rows = conn.run(f'SELECT * FROM {table}')
         columns = [col['name'] for col in conn.columns]
 
-        csv_buffer= io.StringIO()
-        writer = csv.writer(csv_buffer)
-        writer.writerow(columns)
-        writer.writerows(rows)
-
-        csv_buffer.seek(0)
+        csv_buffer = format_to_csv(rows, columns)
 
         try:
-            s3_client.put_object(Body=csv_buffer.getvalue(), 
-                                 Bucket='banana-squad-code', 
-                                 Key=file_name)
+            store_in_s3(s3_client, csv_buffer, bucket_name, file_name)
             return {"result": "Success"}
+        
         except Exception:
             return {"result": "Failure"}
 
     conn.close()
-   
+  
 def continuous_extract():
-    s3_client = boto3.client('s3')
+    s3_client = create_s3_client()
     conn = connect()
     response = s3_client.get_object(Bucket='banana-squad-code', Key='last_extracted.txt')
     contents = response['Body'].read()
     readable_content = contents.decode('utf-8')
     query = conn.run('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' AND table_name != \'_prisma_migrations\'')
-    table_name = [name for name in query]
 
-    for table in table_name:
-        query = conn.run(f'SELECT created_at FROM {table} WHERE created_at > {readable_content}')
+    for table in query:    
+        file_name = create_file_name(table)
+        rows = conn.run(f'SELECT * FROM {table} WHERE created_at > {readable_content}')
+        columns = [col['name'] for col in conn.columns]
 
-# time = datetime.now().isoformat().replace('T',' ')
-# print(time)
+        if rows:
 
-# s3_client = boto3.client('s3')
-# conn = connect()
-# query = conn.run('SELECT created_at, last_updated FROM sales_order WHERE created_at != last_updated')
-# print(query)
+            csv_buffer = format_to_csv(rows, columns)
+
+            try:
+                store_in_s3(s3_client, csv_buffer, bucket_name, file_name)
+                return {"result": "Success"}
+            except Exception:
+                return {"result": "Failure"}
+        
+    conn.close()
