@@ -32,6 +32,8 @@ def create_s3_client():
     return boto3.client('s3')
 
 def create_file_name(table):
+    if not table or not isinstance(table, str):
+        raise ValueError("Table name cannot be empty!")
 
     year = datetime.now().strftime('%Y')
     month = datetime.now().strftime('%m')
