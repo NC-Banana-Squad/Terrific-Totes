@@ -1,7 +1,9 @@
 from datetime import datetime
 from pprint import pprint
-from pg8000.native import Connection
+from pg8000.native import Connection, Error
+from pg8000.exceptions import InterfaceError, DatabaseError
 from util_functions import connect, create_s3_client
+import logging
 import boto3
 import csv
 import dotenv
@@ -10,23 +12,46 @@ import io
 
 bucket_name = 'banana-squad-code'
 
-def connect():
+# Giving logger the name of the module in which it is used (lambda_handler)
+logger = logging.getLogger(__name__)
+
+# '-> Connection' syntax just tells us this function returns a Connection
+def connect() -> Connection:
+    """Gets a Connection to the database.
+
+    Credentials are retrieved from environment variables.
+
+    Returns:
+        a database connection
+
+    Raises:
+        DBConnectionException
+    """
+
     dotenv.load_dotenv()
 
-    user = os.environ['user']
-    database = os.environ['database']
-    password = os.environ['password']
-    host = os.environ['host']
-    port = os.environ['port']
+    try:
 
-    return Connection(
+        user = os.environ['user']
+        database = os.environ['database']
+        password = os.environ['password']
+        host = os.environ['host']
+        port = os.environ['port']
 
-        user=user,
-        database=database,
-        password=password,
-        host=host,
-        port=port
-    )
+        return Connection(
+
+            user=user,
+            database=database,
+            password=password,
+            host=host,
+            port=port
+        )
+    
+    except DatabaseError as e:
+        print("Error:", str(e))
+
+        logger.error(f"Failed to connect to database: {e}")
+        # raise DatabaseError("Failed to connect to database")
 
 def create_s3_client():
     return boto3.client('s3')
