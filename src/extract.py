@@ -75,16 +75,14 @@ def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
                                 Bucket=bucket_name,
                                 Key=file_name)
         logging.info(f"Successfully uploaded {file_name} to bucket {bucket_name}")
-        
+    
     except ClientError as e:
         err_code = e.response['Error']['Code']
-
         if err_code == "NoSuchBucket":
             logging.error(f"The specified bucket {bucket_name} does not exist.")
-            raise
         else:
             logging.error(f"An unexpected ClientError occurred: {e}")
-    
+        raise
     except Exception as e:
         logging.error(f"An unexpected ClientError occurred: {e}")
         raise
