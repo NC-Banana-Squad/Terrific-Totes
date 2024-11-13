@@ -2,7 +2,7 @@ from datetime import datetime
 from pprint import pprint
 from pg8000.native import Connection, Error
 from pg8000.exceptions import InterfaceError, DatabaseError
-from util_functions import connect, create_s3_client
+# from util_functions import connect, create_s3_client
 import logging
 import boto3
 import csv
@@ -46,12 +46,31 @@ def connect() -> Connection:
             host=host,
             port=port
         )
-    
-    except DatabaseError as e:
-        print("Error:", str(e))
 
-        logger.error(f"Failed to connect to database: {e}")
-        # raise DatabaseError("Failed to connect to database")
+    # Handles missing environment variables    
+    except KeyError as e:
+        logger.error(f"Missing environment variable: {e}")
+        raise KeyError(f"Missing environment variable: {e}")
+
+    # Handles connection issues (wrong credentials, network problems etc)
+    except InterfaceError as e:
+        logger.error(f"Database interface error: {e}")
+        raise InterfaceError(f"Database interface error: {e}")
+
+    # Handles errors related to database instructions
+    except DatabaseError as e:
+        logger.error(f"Failed to connect to db: {e}")
+        raise DatabaseError(f"Failed to connect to db: {e}")
+    
+    # Handles general pg8000 errors
+    except Error as e:
+        logger.error(f"pg8000 error: {e}")
+        raise Error(f"pg8000 error: {e}")
+    
+    # Catches any other general errors that could arise    
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise Exception(f"Unexpected error: {e}")
 
 def create_s3_client():
     return boto3.client('s3')
