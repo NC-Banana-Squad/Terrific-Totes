@@ -32,6 +32,12 @@ def create_s3_client():
     return boto3.client('s3')
 
 def create_file_name(table):
+
+    '''Function takes a table name provided by either initial or continuous
+    extract functions, creates a file system with the parent folder named after the table
+    and subsequent folders named after time periods respectively. 
+    Returns a full file name with a path to it. Path will be created in S3 busket.'''
+
     if not table or not isinstance(table, str):
         raise ValueError("Table name cannot be empty!")
 
@@ -45,6 +51,12 @@ def create_file_name(table):
     return file_name
 
 def format_to_csv(rows, columns):
+
+    '''Function receives rows and columns as arguments from either initial or continuous
+    extract functions and creates a file like object of csv format in the buffer.
+    The pointer in the buffer is reset to the beginning of the file and returns the buffer
+    contents, so the file like object can be put into S3 bucket with store_in_s3 function.
+    Function allows to avoid potential security breaches that arise when data is saved locally.'''
 
     if not columns:
         raise ValueError('Column headers cannot be empty!')
