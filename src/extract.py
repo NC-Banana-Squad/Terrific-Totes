@@ -18,12 +18,9 @@ logger = logging.getLogger(__name__)
 # '-> Connection' syntax just tells us this function returns a Connection
 def connect() -> Connection:
     """Gets a Connection to the database.
-
     Credentials are retrieved from environment variables.
-
     Returns:
-        a database connection
-
+        a database connection   
     Raises:
         DBConnectionException
     """
@@ -73,6 +70,10 @@ def connect() -> Connection:
         raise Exception(f"Unexpected error: {e}")
 
 def create_s3_client():
+
+    """
+    Add comment :)
+    """
     return boto3.client('s3')
 
 def create_file_name(table):
