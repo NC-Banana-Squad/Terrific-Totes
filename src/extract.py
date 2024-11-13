@@ -1,7 +1,7 @@
 from datetime import datetime
 from pprint import pprint
 from pg8000.native import Connection
-from util_functions import connect, create_s3_client
+#from util_functions import connect, create_s3_client
 import boto3
 import csv
 import dotenv
@@ -44,6 +44,9 @@ def create_file_name(table):
 
 def format_to_csv(rows, columns):
 
+    if not columns:
+        raise ValueError('Column headers cannot be empty!')
+    
     csv_buffer = io.StringIO()
     writer = csv.writer(csv_buffer)
     writer.writerow(columns)
@@ -52,6 +55,7 @@ def format_to_csv(rows, columns):
     csv_buffer.seek(0)
 
     return csv_buffer
+
 
 def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
     s3_client.put_object(Body=csv_buffer.getvalue(),
