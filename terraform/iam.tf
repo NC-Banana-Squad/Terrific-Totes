@@ -31,11 +31,14 @@ resource "aws_iam_role" "lambda_role" {
 
 data "aws_iam_policy_document" "s3_data_policy_doc" {
   statement {
-    effect  = "Allow"
-    actions = ["s3:*"] 
+    actions = ["s3:PutObject", "s3:GetObject", "s3:ListAllObjects"]
+
+    resources = [
+      "${aws_s3_bucket.ingested_data_bucket.arn}/*",
+      "arn:aws:s3:::*"
+    ]
   }
 }
-#feedback: in resource - which s3 bucket (out of 3) is going to be accessed. be more specific.
 
 # Create
 resource "aws_iam_policy" "s3_write_policy" {
@@ -75,6 +78,10 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_write_policy_attachment" {
     policy_arn = aws_iam_policy.s3_write_policy.arn
 }
 
+# resource "aws_iam_role_policy_attachment" "s3_bucket_data_policy" {
+#     role = aws_iam_policy.s3_write_policy.name
+#     policy_arn = data.aws_iam_policy_document.s3_data_policy_doc.arn
+# }
 
 # ------------------------------
 # Lambda IAM Policy for CloudWatch

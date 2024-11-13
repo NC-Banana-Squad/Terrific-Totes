@@ -18,7 +18,7 @@ resource "aws_lambda_function" "extract" {
   source_code_hash = data.archive_file.extract_lambda.output_base64sha256
 
   runtime          = var.python_runtime
-  #layers           = [aws_lambda_layer_version.dependency_layer.arn]
+  layers           = [aws_lambda_layer_version.dependency_layer.arn]
 }
 
 # feedback: 

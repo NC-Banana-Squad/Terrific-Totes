@@ -41,7 +41,9 @@ resource "aws_s3_object" "extract_layer_code" {
   #See lambda.tf for the path to the code.
   bucket = aws_s3_bucket.code_bucket.bucket
   key    = "extract_layer_code.zip"
-  source = "${path.module}/../extract_layer.zip" 
+  source = data.archive_file.extract_layer.output_path
+  etag = filemd5(data.archive_file.extract_layer.output_path)
+  depends_on = [null_resource.create_dependencies]
 }
 
 
