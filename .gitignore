@@ -3,5 +3,7 @@ venv
 dlt
 data_fetch.csv
 **/*__pycache__*
-__pycache__
+__pycache__/
 **/*pycache
+*.pyc
+*.pyo
