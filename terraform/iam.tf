@@ -35,6 +35,7 @@ data "aws_iam_policy_document" "s3_data_policy_doc" {
     actions = ["s3:*"] 
   }
 }
+#feedback: in resource - which s3 bucket (out of 3) is going to be accessed. be more specific.
 
 # Create
 resource "aws_iam_policy" "s3_write_policy" {
@@ -195,7 +196,7 @@ resource "aws_cloudwatch_log_metric_filter" "error_filter" {
 }
 
 #Uses metric_filter to create cloudwatch alarm. Runs once every 2 mins for now.
-resource "aws_cloudwatch_metric_alarm" "foobar" {
+resource "aws_cloudwatch_metric_alarm" "metric_alarm" {
   alarm_name                = "extract_email_notifications"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 1
@@ -218,8 +219,8 @@ data "aws_iam_policy_document" "s3_document" {
     actions = ["s3:PutObject", "s3:ListAllMyBuckets"]
 
     resources = [
-      aws_s3_bucket.data_bucket.arn,
-      "${aws_s3_bucket.data_bucket.arn}/*",
+      aws_s3_bucket.ingested_data_bucket.arn,
+      "${aws_s3_bucket.ingested_data_bucket.arn}/*",
       "arn:aws:s3:::*"
     ]
   }

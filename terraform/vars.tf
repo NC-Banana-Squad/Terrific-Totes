@@ -8,9 +8,14 @@ variable "python_runtime" {
   default = "python3.12"
 }
 
-variable "data_bucket_prefix" {
+variable "ingested_data_bucket_prefix" {
   type    = string
-  default = "banana-squad-data"
+  default = "banana-squad-ingested-data"
+}
+
+variable "processed_data_bucket_prefix" {
+  type    = string
+  default = "banana-squad-processed-data"
 }
 
 

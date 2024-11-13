@@ -5,10 +5,27 @@ terraform {
       version = "~> 5.68.0"
     }
   }
+    backend "s3" {
+    bucket = "bucket-tfstate-project-banana"
+    key = "de-s3-file-reader/terraform.tfstate"
+    region = "eu-west-2"
+  }
 }
 
 provider "aws" {
     region = "eu-west-2"
+    default_tags {
+      tags = {
+      ProjectName = "Terrific-Totes"
+      Team = "Cloudy with a chance of Terraform"
+      DeployedFrom = "Terraform"
+      Repository = "Terrific-Totes"
+      CostCentre = "DE"
+      Environment = "dev"
+    }
+  }
 }
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+
+

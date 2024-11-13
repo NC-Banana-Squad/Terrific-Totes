@@ -1,9 +1,20 @@
-resource "aws_s3_bucket" "data_bucket" {
+
+resource "aws_s3_bucket" "ingested_data_bucket" {
   #Creating s3 bucket to store our ingestion data from extract for project.
-  bucket = var.data_bucket_prefix
+  bucket = var.ingested_data_bucket_prefix
 
   tags = {
-    Name        = "My data bucket"
+    Name        = "My ingested data bucket"
+    Environment = "Dev"
+  }
+}
+
+resource "aws_s3_bucket" "processed_data_bucket" {
+  #Creating s3 bucket to store our processed data from extract for project.
+  bucket = var.processed_data_bucket_prefix
+
+  tags = {
+    Name        = "My processed data bucket"
     Environment = "Dev"
   }
 }
@@ -19,17 +30,19 @@ resource "aws_s3_bucket" "code_bucket" {
   }
 }
 
-resource "aws_s3_object" "extra_lambda_code" {
+resource "aws_s3_object" "extract_lambda_code" {
   bucket = aws_s3_bucket.code_bucket.bucket
   key    = "extract_lambda_function.zip"
-  source = "${path.module}/../src/extract.py"
+  source = "${path.module}/../extract_function.zip"
 }
-
 
 resource "aws_s3_object" "extract_layer_code" {
   #Upload the layer code to the code_bucket.
   #See lambda.tf for the path to the code.
   bucket = aws_s3_bucket.code_bucket.bucket
-  key    = "extract_layer_code"
-  source = "${path.module}/../extract_layer.zip"
+  key    = "extract_layer_code.zip"
+  source = "${path.module}/../extract_layer.zip" 
 }
+
+
+  
