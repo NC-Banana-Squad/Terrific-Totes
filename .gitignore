@@ -17,3 +17,5 @@ venv/
 **/.terraform*
 *.tfstate*
 .env
+/extract_layer
+/layer
