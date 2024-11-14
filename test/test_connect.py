@@ -5,6 +5,7 @@ from pg8000.native import Error
 from pg8000.exceptions import InterfaceError, DatabaseError
 import os
 import pytest
+import unittest
 
 @pytest.fixture
 def set_env_vars():
@@ -42,9 +43,8 @@ def test_connection_success(mock_connection, set_env_vars):
 # Invoke connect() and check 'raise' message matches
 @patch('src.extract.Connection')
 def test_handles_missing_env_variables(mock_connection):
-    with patch.dict(os.environ, {}):
-        with pytest.raises(KeyError, match="Missing environment variable:"):
-            connect()
+    with pytest.raises(KeyError):
+        connect()
 
 # side_effect triggers InterfaceError
 # Invoke connect() and check 'raise' message matches

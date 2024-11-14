@@ -2,6 +2,7 @@ from datetime import datetime
 from pprint import pprint
 from pg8000.native import Connection, Error
 from pg8000.exceptions import InterfaceError, DatabaseError
+from botocore.exceptions import NoCredentialsError
 # from util_functions import connect, create_s3_client
 import logging
 import boto3
@@ -47,19 +48,19 @@ def connect() -> Connection:
         )
 
     # Handles missing environment variables    
-    except KeyError as e:
-        logger.error(f"Missing environment variable: {e}")
-        raise KeyError(f"Missing environment variable: {e}")
+    except KeyError as ke:
+        logger.error(f"Missing environment variable: {ke}")
+        raise KeyError(f"Missing environment variable: {ke}")
 
     # Handles connection issues (wrong credentials, network problems etc)
-    except InterfaceError as e:
-        logger.error(f"Database interface error: {e}")
-        raise InterfaceError(f"Database interface error: {e}")
+    except InterfaceError as ie:
+        logger.error(f"Database interface error: {ie}")
+        raise InterfaceError(f"Database interface error: {ie}")
 
     # Handles errors related to database instructions
-    except DatabaseError as e:
-        logger.error(f"Failed to connect to db: {e}")
-        raise DatabaseError(f"Failed to connect to db: {e}")
+    except DatabaseError as de:
+        logger.error(f"Failed to connect to db: {de}")
+        raise DatabaseError(f"Failed to connect to db: {de}")
     
     # Handles general pg8000 errors
     except Error as e:
@@ -67,16 +68,23 @@ def connect() -> Connection:
         raise Error(f"pg8000 error: {e}")
     
     # Catches any other general errors that could arise    
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        raise Exception(f"Unexpected error: {e}")
+    except Exception as E:
+        logger.error(f"Unexpected error: {E}")
+        raise Exception(f"Unexpected error: {E}")
 
 def create_s3_client():
 
     """
     Add comment :)
     """
-    return boto3.client('s3')
+    try:
+        return boto3.client('s3')
+    except NoCredentialsError:
+        print("Error: AWS credentials not found.")
+        logger.error("Error: AWS credentials not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
 
 def create_file_name(table):
 
@@ -186,8 +194,9 @@ def initial_extract():
     conn.close()
   
 def continuous_extract():
-    s3_client = create_s3_client()
+    s3_client = create_s3_client()    
     conn = connect()
+
     response = s3_client.get_object(Bucket='banana-squad-code', Key='last_extracted.txt')
     contents = response['Body'].read()
     readable_content = contents.decode('utf-8')
