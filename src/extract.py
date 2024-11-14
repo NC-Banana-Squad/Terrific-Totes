@@ -131,32 +131,6 @@ def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
     s3_client.put_object(Body=csv_buffer.getvalue(),
                                 Bucket=bucket_name,
                                 Key=file_name)
-    
-    # Code with try/except blocks and errors raised
-    # logging.info(f"Successfully uploaded {file_name} to bucket {bucket_name}")
-    # if not bucket_name or not file_name:
-    #     raise ValueError("Bucket name and file name must not be empty") 
-    # if not hasattr(csv_buffer, 'getvalue'):
-    #     raise ValueError("csv_buffer must be a StringIO object.")
-    # try:
-        # Attempt to put object into S3
-        # s3_client.put_object(Body=csv_buffer.getvalue(),
-    #                             Bucket=bucket_name,
-    #                             Key=file_name)
-    # logging.info(f"Successfully uploaded {file_name} to bucket {bucket_name}")
-    # except ClientError as ce:
-    #     error_code = ce.response['Error']['Code']
-    #     if error_code == "NoSuchBucket":
-    #         logging.error(f"The specified bucket {bucket_name} does not exist.")
-    #         raise
-    #     elif error_code == "AccessDenied":
-    #         logging.error(f"Access denied when attempting to upload {file_name} to bucket {bucket_name}. Please check your IAM permissions.")
-    #         raise
-    #     else:
-    #         logging.error(f"An unexpected ClientError occurred: {ce}")
-    # except Exception as e:
-    #     logging.error(f"An unexpected ClientError occurred: {e}")
-    #     raise
 
 
 def lambda_handler(event, context):
@@ -213,28 +187,3 @@ def continuous_extract():
     
     conn.close()
     return {"result": "Success"}
-
-
-    # s3_client = create_s3_client()
-    # conn = connect()
-    # response = s3_client.get_object(Bucket='banana-squad-code', Key='last_extracted.txt')
-    # contents = response['Body'].read()
-    # readable_content = contents.decode('utf-8')
-    # query = conn.run('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' AND table_name != \'_prisma_migrations\'')
-
-    # for table in query:    
-    #     file_name = create_file_name(table)
-    #     rows = conn.run(f'SELECT * FROM {table} WHERE created_at > {readable_content}')
-    #     columns = [col['name'] for col in conn.columns]
-
-    #     if rows:
-
-    #         csv_buffer = format_to_csv(rows, columns)
-
-    #         try:
-    #             store_in_s3(s3_client, csv_buffer, bucket_name, file_name)
-    #             return {"result": "Success"}
-    #         except Exception:
-    #             return {"result": "Failure"}
-        
-    # conn.close()
