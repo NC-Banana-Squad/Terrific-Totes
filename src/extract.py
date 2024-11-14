@@ -1,2 +1,4 @@
+from util_functions import test_util
+
 def lambda_handler(event, context):
-    pass
+    return test_util()
