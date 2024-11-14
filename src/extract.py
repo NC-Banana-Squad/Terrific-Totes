@@ -122,30 +122,35 @@ def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
     '''
     Uploads a CSV file (in memory) to an AWS S3 bucket.
 
-    Params: 
+    Args: 
         s3_client: A boto3 S3 client.
-        csv_buffer: An in-memory file-like object containing CSV data.
+        csv_buffer: StringIO object (in-memory file-like) containing CSV data.
         bucket_name (str): The name of the S3 bucket to store the file in.
         file_name (str): The name to assign to the file in the S3 bucket.
     '''
-
-    try:
-        if not hasattr(csv_buffer, 'getvalue'):
-            raise AttributeError("csv_buffer must be a StringIO object.")
+    if not bucket_name or not file_name:
+        raise ValueError("Bucket name and file name must not be empty") 
+    if not hasattr(csv_buffer, 'getvalue'):
+        raise ValueError("csv_buffer must be a StringIO object.")
         
+    try:
         # Attempt to put object into S3
         s3_client.put_object(Body=csv_buffer.getvalue(),
                                 Bucket=bucket_name,
                                 Key=file_name)
         logging.info(f"Successfully uploaded {file_name} to bucket {bucket_name}")
     
-    except ClientError as e:
-        err_code = e.response['Error']['Code']
-        if err_code == "NoSuchBucket":
+    except ClientError as ce:
+        error_code = ce.response['Error']['Code']
+        if error_code == "NoSuchBucket":
             logging.error(f"The specified bucket {bucket_name} does not exist.")
+            raise
+        elif error_code == "AccessDenied":
+            logging.error(f"Access denied when attempting to upload {file_name} to bucket {bucket_name}. Please check your IAM permissions.")
+            raise
         else:
-            logging.error(f"An unexpected ClientError occurred: {e}")
-        raise
+            logging.error(f"An unexpected ClientError occurred: {ce}")
+
     except Exception as e:
         logging.error(f"An unexpected ClientError occurred: {e}")
         raise

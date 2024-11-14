@@ -55,7 +55,7 @@ def test_store_in_s3_invalid_buffer():
     csv_buffer = None
     mock_s3_client = boto3.client('s3', region_name='us-east-1')
     
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         store_in_s3(mock_s3_client, csv_buffer, bucket_name, file_name)
 
 
@@ -84,4 +84,46 @@ def test_store_in_s3_logging(mock_logging):
         f"The specified bucket {bucket_name} does not exist."
     )
 
-
+@mock_aws
+def test_store_in_s3_access_denied():
+    # Create a mock S3 client
+    mock_s3_client = MagicMock()
+    
+    # Create a mock CSV buffer
+    csv_buffer = StringIO()
+    csv_buffer.write("test,data\n1,2")
+    
+    # Configure the mock to raise an AccessDenied error
+    error_response = {
+        'Error': {
+            'Code': 'AccessDenied',
+            'Message': 'Access Denied'
+        }
+    }
+    mock_s3_client.put_object.side_effect = ClientError(error_response, 'PutObject')
+    
+    # Test parameters
+    bucket_name = 'test-bucket'
+    file_name = 'test.csv'
+    
+    # Patch the logging to capture the error message
+    with patch('logging.error') as mock_logging:
+        # Assert that the function raises the ClientError
+        with pytest.raises(ClientError) as exc_info:
+            store_in_s3(mock_s3_client, csv_buffer, bucket_name, file_name)
+        
+        # Verify the error code
+        assert exc_info.value.response['Error']['Code'] == 'AccessDenied'
+        
+        # Verify that the correct error message was logged
+        mock_logging.assert_called_once_with(
+            f"Access denied when attempting to upload {file_name} to bucket {bucket_name}. "
+            "Please check your IAM permissions."
+        )
+        
+        # Verify that put_object was called with correct parameters
+        mock_s3_client.put_object.assert_called_once_with(
+            Body=csv_buffer.getvalue(),
+            Bucket=bucket_name,
+            Key=file_name
+        )
