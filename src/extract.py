@@ -128,32 +128,35 @@ def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
         bucket_name (str): The name of the S3 bucket to store the file in.
         file_name (str): The name to assign to the file in the S3 bucket.
     '''
-    if not bucket_name or not file_name:
-        raise ValueError("Bucket name and file name must not be empty") 
-    if not hasattr(csv_buffer, 'getvalue'):
-        raise ValueError("csv_buffer must be a StringIO object.")
-        
-    try:
-        # Attempt to put object into S3
-        s3_client.put_object(Body=csv_buffer.getvalue(),
+    s3_client.put_object(Body=csv_buffer.getvalue(),
                                 Bucket=bucket_name,
                                 Key=file_name)
-        logging.info(f"Successfully uploaded {file_name} to bucket {bucket_name}")
     
-    except ClientError as ce:
-        error_code = ce.response['Error']['Code']
-        if error_code == "NoSuchBucket":
-            logging.error(f"The specified bucket {bucket_name} does not exist.")
-            raise
-        elif error_code == "AccessDenied":
-            logging.error(f"Access denied when attempting to upload {file_name} to bucket {bucket_name}. Please check your IAM permissions.")
-            raise
-        else:
-            logging.error(f"An unexpected ClientError occurred: {ce}")
-
-    except Exception as e:
-        logging.error(f"An unexpected ClientError occurred: {e}")
-        raise
+    # Code with try/except blocks and errors raised
+    # logging.info(f"Successfully uploaded {file_name} to bucket {bucket_name}")
+    # if not bucket_name or not file_name:
+    #     raise ValueError("Bucket name and file name must not be empty") 
+    # if not hasattr(csv_buffer, 'getvalue'):
+    #     raise ValueError("csv_buffer must be a StringIO object.")
+    # try:
+        # Attempt to put object into S3
+        # s3_client.put_object(Body=csv_buffer.getvalue(),
+    #                             Bucket=bucket_name,
+    #                             Key=file_name)
+    # logging.info(f"Successfully uploaded {file_name} to bucket {bucket_name}")
+    # except ClientError as ce:
+    #     error_code = ce.response['Error']['Code']
+    #     if error_code == "NoSuchBucket":
+    #         logging.error(f"The specified bucket {bucket_name} does not exist.")
+    #         raise
+    #     elif error_code == "AccessDenied":
+    #         logging.error(f"Access denied when attempting to upload {file_name} to bucket {bucket_name}. Please check your IAM permissions.")
+    #         raise
+    #     else:
+    #         logging.error(f"An unexpected ClientError occurred: {ce}")
+    # except Exception as e:
+    #     logging.error(f"An unexpected ClientError occurred: {e}")
+    #     raise
 
 
 def lambda_handler(event, context):
