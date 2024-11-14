@@ -33,7 +33,7 @@ resource "aws_s3_bucket" "code_bucket" {
 resource "aws_s3_object" "extract_lambda_code" {
   bucket = aws_s3_bucket.code_bucket.bucket
   key    = "extract_lambda_function.zip"
-  source = "${path.module}/../src/extract_lambda.zip"
+  source = "${path.module}/../src/extract/extract_lambda.zip"
   #etag = filemd5(null_resource.extract_lambda)
   depends_on = [null_resource.extract_lambda]
 }

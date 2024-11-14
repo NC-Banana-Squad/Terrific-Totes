@@ -19,11 +19,11 @@
 resource "null_resource" "extract_lambda" {
   
   provisioner "local-exec" {
-    command = "rm -f ${path.module}/../src/extract_lambda.zip && zip -j ${path.module}/../src/extract_lambda.zip ${path.module}/../src/extract.py ${path.module}/../src/util_functions.py"
+    command = "rm -f ${path.module}/../src/extract/extract_lambda.zip && zip -j ${path.module}/../src/extract/extract_lambda.zip ${path.module}/../src/extract/extract.py ${path.module}/../src/extract/util_functions.py"
   }
 
   triggers = {
-    dependencies = "${filemd5("${path.module}/../src/extract.py")}-${filemd5("${path.module}/../src/util_functions.py")}"
+    dependencies = "${filemd5("${path.module}/../src/extract/extract.py")}-${filemd5("${path.module}/../src/extract/util_functions.py")}"
 
   }
 }
@@ -31,12 +31,12 @@ resource "null_resource" "extract_lambda" {
 resource "aws_lambda_function" "extract" {
   #Creates a Lambda function called extract with dependency layer.
   #Connect the layer which is outlined above
-  filename         = "${path.module}/../src/extract_lambda.zip"
+  filename         = "${path.module}/../src/extract/extract_lambda.zip"
   function_name    = var.lambda_name
   role             = aws_iam_role.lambda_role.arn
   handler          = "extract.lambda_handler"
   depends_on = [null_resource.extract_lambda]
-  # source_code_hash = filebase64sha256("${path.module}/../src/extract_lambda.py")
+  # source_code_hash = filebase64sha256("${path.module}/../src/extract/extract_lambda.py")
   runtime          = var.python_runtime
   layers           = [aws_lambda_layer_version.dependency_layer.arn]
 }
