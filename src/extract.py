@@ -230,3 +230,5 @@ def continuous_extract():
                 return {"result": "Failure"}
         
     conn.close()
+
+pprint(connect())
