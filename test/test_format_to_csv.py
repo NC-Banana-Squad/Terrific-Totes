@@ -1,6 +1,7 @@
 from src.extract import format_to_csv
 import io
 import csv
+import pytest 
 
 class TestFormatToCsv:
 
@@ -35,7 +36,10 @@ class TestFormatToCsv:
         assert result_rows == []
 
     def test_raises_exception_for_empty_columns(self):
-        pass
+        rows = [["John", "Doe", 56], ["Jane", "Smith", 32]]
+        columns = []
+        with pytest.raises(ValueError):
+            format_to_csv(rows,columns)
 
     def test_pointer_position_is_reset_to_start(self):
         rows = [["John", "Doe", 56], ["Jane", "Smith", 32]]
