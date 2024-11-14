@@ -22,60 +22,44 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.trust_policy.json
 }
 
-
-# ------------------------------
-# Lambda IAM Policy for S3 Write
-# ------------------------------
-
-# Define
-
-data "aws_iam_policy_document" "s3_data_policy_doc" {
-  statement {
-    actions = ["s3:PutObject", "s3:GetObject", "s3:ListAllObjects"]
-
-    resources = [
-      "${aws_s3_bucket.ingested_data_bucket.arn}/*",
-      "arn:aws:s3:::*"
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "lambda-s3-logs-policy"
+  description = "IAM policy for Lambda to access S3 buckets and CloudWatch logs"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["s3:GetObject"],
+        Effect = "Allow",
+        Resource = "arn:aws:s3:::code_bucket/*"
+      },
+      {
+        Action = ["s3:PutObject"],
+        Effect = "Allow",
+        Resource = "arn:aws:s3:::injested_data_bucket/*"
+      },
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Effect = "Allow",
+        Resource = "arn:aws:logs:eu-west-2:log-group:/aws/lambda/*"
+      }
     ]
-  }
+  })
 }
 
-# Create
-resource "aws_iam_policy" "s3_write_policy" {
-  name_prefix = "s3-policy-${var.lambda_name}-write"
-  description = "s3-write-for-${var.lambda_name}"
-
-
-      policy = <<EOF
-   {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Effect": "Allow",
-        "Action": [
-            "logs:*"
-        ],
-        "Resource": "arn:aws:logs:*:*:*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": [
-            "s3:*",
-            "s3-object-lambda:*"
-        ],
-        "Resource": "*"
-    }
-]
-
-} 
-    EOF
-    }
 
 
 # Attach
 resource "aws_iam_role_policy_attachment" "lambda_s3_write_policy_attachment" {
     role = aws_iam_role.lambda_role.name
-    policy_arn = aws_iam_policy.s3_write_policy.arn
+    policy_arn = aws_iam_policy.lambda_policy.arn
+    lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # resource "aws_iam_role_policy_attachment" "s3_bucket_data_policy" {
@@ -87,50 +71,53 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_write_policy_attachment" {
 # Lambda IAM Policy for CloudWatch
 # ------------------------------
 
-# Define
-data "aws_iam_policy_document" "cw_document" {
-  statement {
+# # Define
+# data "aws_iam_policy_document" "cw_document" {
+#   statement {
 
-    actions = [ "logs:CreateLogGroup" ]
+#     actions = [ "logs:CreateLogGroup" ]
 
-    resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
-    ]
-  }
+#     resources = [
+#       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+#     ]
+#   }
 
-  statement {
+#   statement {
     
-    actions = [ "logs:CreateLogStream", "logs:PutLogEvents" ]
+#     actions = [ "logs:CreateLogStream", "logs:PutLogEvents" ]
 
-    resources = [
-      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.extract.function_name}:*"
-    ]
-  }
-}
+#     resources = [
+#       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.extract.function_name}:*"
+#     ]
+#   }
+# }
 
-# Create
-resource "aws_iam_policy" "cw_policy" {
-  name   = "${var.lambda_name}-cw-logger"
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        Action : [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Effect : "Allow",
-        Resource : "arn:aws:logs:*:*:*"
-      }
-    ]
-  })
-}
+# # Create
+# resource "aws_iam_policy" "cw_policy" {
+#   name   = "${var.lambda_name}-cw-logger"
+#   policy = jsonencode({
+#     "Version" : "2012-10-17",
+#     "Statement" : [
+#       {
+#         Action : [
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents"
+#         ],
+#         Effect : "Allow",
+#         Resource : "arn:aws:logs:*:*:*"
+#       }
+#     ]
+#   })
+# }
 
-# Attach
-resource "aws_iam_role_policy_attachment" "lambda_cw_policy_attachment" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.cw_policy.arn
-}
+# # Attach
+# resource "aws_iam_role_policy_attachment" "lambda_cw_policy_attachment" {
+#   role       = aws_iam_role.lambda_role.name
+#   policy_arn = aws_iam_policy.cw_policy.arn
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }
 
 resource "aws_cloudwatch_log_group" "log_group" {
   name              = "/aws/lambda/${aws_lambda_function.extract.function_name}"
