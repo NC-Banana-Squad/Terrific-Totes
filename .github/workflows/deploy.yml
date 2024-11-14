@@ -23,7 +23,6 @@ jobs:
           make requirements
       - name: Run Tests and Checks
         run: |
-          source venv/bin/activate
           make run-checks
   deploy-lambda:
     #if: false # this will cause the job to be skipped - delete to enable
