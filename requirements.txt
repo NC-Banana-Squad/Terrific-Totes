@@ -10,5 +10,4 @@ moto==5.0.11
 mypy-extensions==1.0.0
 pg8000
 pandas
-dlt[postgres]
 python-dotenv
