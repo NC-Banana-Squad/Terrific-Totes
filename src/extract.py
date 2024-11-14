@@ -2,6 +2,7 @@ from datetime import datetime
 from pprint import pprint
 from pg8000.native import Connection, Error
 from pg8000.exceptions import InterfaceError, DatabaseError
+from botocore.exceptions import NoCredentialsError, ClientError
 # from util_functions import connect, create_s3_client
 import logging
 import boto3
@@ -9,7 +10,6 @@ import csv
 import dotenv
 import os
 import io
-from botocore.exceptions import ClientError
 import logging
 
 bucket_name = 'banana-squad-code'
@@ -20,59 +20,31 @@ def connect() -> Connection:
     Credentials are retrieved from environment variables.
     Returns:
         a database connection   
-    Raises:
-        DBConnectionException
     """
 
     dotenv.load_dotenv()
 
-    try:
+    user = os.environ['user']
+    database = os.environ['database']
+    password = os.environ['password']
+    host = os.environ['host']
+    port = os.environ['port']
 
-        user = os.environ['user']
-        database = os.environ['database']
-        password = os.environ['password']
-        host = os.environ['host']
-        port = os.environ['port']
+    return Connection(
 
-        return Connection(
-
-            user=user,
-            database=database,
-            password=password,
-            host=host,
-            port=port
-        )
-
-    # Handles missing environment variables    
-    except KeyError as e:
-        logger.error(f"Missing environment variable: {e}")
-        raise KeyError(f"Missing environment variable: {e}")
-
-    # Handles connection issues (wrong credentials, network problems etc)
-    except InterfaceError as e:
-        logger.error(f"Database interface error: {e}")
-        raise InterfaceError(f"Database interface error: {e}")
-
-    # Handles errors related to database instructions
-    except DatabaseError as e:
-        logger.error(f"Failed to connect to db: {e}")
-        raise DatabaseError(f"Failed to connect to db: {e}")
-    
-    # Handles general pg8000 errors
-    except Error as e:
-        logger.error(f"pg8000 error: {e}")
-        raise Error(f"pg8000 error: {e}")
-    
-    # Catches any other general errors that could arise    
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        raise Exception(f"Unexpected error: {e}")
+        user=user,
+        database=database,
+        password=password,
+        host=host,
+        port=port
+    )
 
 def create_s3_client():
 
     """
-    Add comment :)
+    Creates an S3 client using boto3
     """
+
     return boto3.client('s3')
 
 def create_file_name(table):
@@ -114,7 +86,6 @@ def format_to_csv(rows, columns):
 
     return csv_buffer
 
-
 def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
     '''
     Uploads a CSV file (in memory) to an AWS S3 bucket.
@@ -147,18 +118,50 @@ def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
         logging.error(f"An unexpected ClientError occurred: {e}")
         raise
 
-
 def lambda_handler(event, context):
-    s3_client = create_s3_client()
-    if 'last_extracted.txt' in s3_client.list_objects(Bucket='banana-squad-code'):
-        continuous_extract()
-    else:
-        initial_extract()
 
-    last_extracted = datetime.now().isoformat().replace('T',' ')
-    s3_client.put_object(Body=last_extracted, 
-                                 Bucket='banana-squad-code', 
-                                 Key='last_extracted.txt')
+    try:
+        s3_client = create_s3_client()
+    except NoCredentialsError:
+        logger.error("AWS credentials not found. Unable to create S3 client")
+        return {"result": "Failure",
+                "error": "AWS credentials not found. Unable to create S3 client"}
+    except ClientError as e:
+        logger.error(f"Error creating S3 client: {e}")
+        return {"result": "Failure",
+                "error": "Error creating S3 client"}
+        
+    try:
+        response = s3_client.list_objects(Bucket='banana-squad-code')
+        if 'Contents' in response and any(obj['Key']== 'last_extracted.txt' for obj in response['Contents']):
+            continuous_extract(s3_client)
+
+        # if 'last_extracted.txt' in s3_client.list_objects(Bucket='banana-squad-code'):
+        #     continuous_extract(s3_client)
+
+        else:
+            initial_extract(s3_client)
+    except (InterfaceError, DatabaseError) as e:
+        logger.error(f"Error during data extraction: {e}")
+        return {"result": "Failure",
+                "error": "Error during data extraction"}
+
+    try:
+        last_extracted = datetime.now().isoformat().replace('T',' ')
+        s3_client.put_object(Body=last_extracted,
+                             Bucket='banana-squad-code',
+                             Key='last_extracted.txt')
+    except ClientError as e:
+        logger.error(f"Error updating last_extracted.txt: {e}")
+        return {"result": "Failure",
+                "error": "Error updating last_extracted.txt"}
+    
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return {"result": "Failure",
+                "error": "Unexpected error"}
+
+    return {"result": "Success"}
     
 def initial_extract():
     '''Create s3 client'''
@@ -207,8 +210,9 @@ def initial_extract():
     conn.close()
   
 def continuous_extract():
-    s3_client = create_s3_client()
+    s3_client = create_s3_client()    
     conn = connect()
+
     response = s3_client.get_object(Bucket='banana-squad-code', Key='last_extracted.txt')
     contents = response['Body'].read()
     readable_content = contents.decode('utf-8')
