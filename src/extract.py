@@ -13,11 +13,8 @@ from botocore.exceptions import ClientError
 import logging
 
 bucket_name = 'banana-squad-code'
+logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# Giving logger the name of the module in which it is used (lambda_handler)
-logger = logging.getLogger(__name__)
-
-# '-> Connection' syntax just tells us this function returns a Connection
 def connect() -> Connection:
     """Gets a Connection to the database.
     Credentials are retrieved from environment variables.
@@ -86,7 +83,7 @@ def create_file_name(table):
     Returns a full file name with a path to it. Path will be created in S3 busket.'''
 
     if not table or not isinstance(table, str):
-        raise ValueError("Table name cannot be empty!")
+        table = 'UnexpectedQueryErrors'
 
     year = datetime.now().strftime('%Y')
     month = datetime.now().strftime('%m')
@@ -163,25 +160,49 @@ def lambda_handler(event, context):
                                  Bucket='banana-squad-code', 
                                  Key='last_extracted.txt')
     
-def initial_extract():    
-    s3_client = create_s3_client()
-    conn = connect()
-    query = conn.run('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' AND table_name != \'_prisma_migrations\'')
+def initial_extract():
+    '''Create s3 client'''
+    try:
+        s3_client = create_s3_client() 
+    except Exception as e:
+        logging.error(f"Failed to create a client from create_client function: {e}")
 
+    '''Connect to database'''
+    try:
+        conn = connect() 
+    except Exception as de:
+        logging.error(f"Failed to connect to the database:{de}")
+
+    '''Get public table names from the database'''
+    try:    
+        query = conn.run('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' AND table_name != \'_prisma_migrations\'')
+    except Exception as sqle:
+        logging.error(f"Failed to execute table query:{sqle}")
+
+    '''Query each table to extract all information it contains'''
     for table in query:
+        try:
+            file_name = create_file_name(table) 
+        except Exception as ue:
+            logging.error(f"Unexpected error occured: {ue}")
 
-        file_name = create_file_name(table)
+        '''Create a file like object and keep it in the buffer'''  
         rows = conn.run(f'SELECT * FROM {table}')
-        columns = [col['name'] for col in conn.columns]
+        columns = [col['name'] for col in conn.columns] 
+        
+        try:
+            csv_buffer = format_to_csv(rows, columns) 
+        except Exception as ve:
+            logging.error(f"Columns cannot be empty: {ve}")
 
-        csv_buffer = format_to_csv(rows, columns)
-
+        '''Save the file like object to s3 bucket'''
         try:
             store_in_s3(s3_client, csv_buffer, bucket_name, file_name)
-            return {"result": "Success"}
+            return {"result": f"Object successfully created in {bucket_name} bucket"}
         
         except Exception:
-            return {"result": "Failure"}
+            logging.error(f"Failure: the object {file_name} was not created in {bucket_name} bucket")
+            return {"result": f"Failed to create an object in {bucket_name} bucket"}
 
     conn.close()
   

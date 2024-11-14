@@ -1,0 +1,29 @@
+from src.extract import initial_extract, store_in_s3
+import pytest
+from unittest.mock import patch, Mock
+
+class TestInitialExtract:
+
+    @patch('src.extract.store_in_s3')
+    @patch('src.extract.format_to_csv')
+    @patch('src.extract.create_file_name')
+    @patch('src.extract.connect')
+    @patch('src.extract.create_s3_client')
+    def test_returns_success_for_successful_run(self, mock_create_s3_client, mock_connect, mock_create_file_name, mock_format_to_csv, mock_store_in_s3):
+        mock_create_s3_client.return_value = Mock()
+        mock_conn = Mock()
+        mock_connect.return_value = mock_conn
+        mock_conn.run.side_effect = [
+            [{'table_name': 'peaches'}],
+            [{'cost_of_peaches': 132}]
+        ]
+        mock_conn.columns = [{'name': 'cost_of_peaches'}]
+        mock_create_file_name.return_value = 'why_peaches.csv'
+        mock_format_to_csv.return_value = Mock()
+        mock_store_in_s3.return_value = None
+
+        result = initial_extract()
+        assert result == {"result": f"Object successfully created in banana-squad-code bucket"}
+
+
+
