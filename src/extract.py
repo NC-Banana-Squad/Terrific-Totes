@@ -24,53 +24,24 @@ def connect() -> Connection:
     Credentials are retrieved from environment variables.
     Returns:
         a database connection   
-    Raises:
-        DBConnectionException
     """
 
     dotenv.load_dotenv()
 
-    try:
+    user = os.environ['user']
+    database = os.environ['database']
+    password = os.environ['password']
+    host = os.environ['host']
+    port = os.environ['port']
 
-        user = os.environ['user']
-        database = os.environ['database']
-        password = os.environ['password']
-        host = os.environ['host']
-        port = os.environ['port']
+    return Connection(
 
-        return Connection(
-
-            user=user,
-            database=database,
-            password=password,
-            host=host,
-            port=port
-        )
-
-    # Handles missing environment variables    
-    except KeyError as ke:
-        logger.error(f"Missing environment variable: {ke}")
-        raise KeyError(f"Missing environment variable: {ke}")
-
-    # Handles connection issues (wrong credentials, network problems etc)
-    except InterfaceError as ie:
-        logger.error(f"Database interface error: {ie}")
-        raise InterfaceError(f"Database interface error: {ie}")
-
-    # Handles errors related to database instructions
-    except DatabaseError as de:
-        logger.error(f"Failed to connect to db: {de}")
-        raise DatabaseError(f"Failed to connect to db: {de}")
-    
-    # Handles general pg8000 errors
-    except Error as e:
-        logger.error(f"pg8000 error: {e}")
-        raise Error(f"pg8000 error: {e}")
-    
-    # Catches any other general errors that could arise    
-    except Exception as E:
-        logger.error(f"Unexpected error: {E}")
-        raise Exception(f"Unexpected error: {E}")
+        user=user,
+        database=database,
+        password=password,
+        host=host,
+        port=port
+    )
 
 def create_s3_client():
 

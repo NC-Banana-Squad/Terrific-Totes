@@ -5,7 +5,6 @@ from pg8000.native import Error
 from pg8000.exceptions import InterfaceError, DatabaseError
 import os
 import pytest
-import unittest
 
 @pytest.fixture
 def set_env_vars():
@@ -18,13 +17,13 @@ def set_env_vars():
     }):
         yield
 
-# Patch the Connection to use mock connection / credentials
 @patch('src.extract.Connection')
 def test_connection_success(mock_connection, set_env_vars):
 
     # Create the mock connection and connect to it
     mock_conn_instance=MagicMock()
     mock_connection.return_value = mock_conn_instance
+
     conn = connect()
         
     assert conn == mock_conn_instance
@@ -39,31 +38,26 @@ def test_connection_success(mock_connection, set_env_vars):
         port='5432'
     )
 
-# First patch resets os.environ to be empty, causing KeyError to be raised
-# Invoke connect() and check 'raise' message matches
-@patch('src.extract.Connection')
-def test_handles_missing_env_variables(mock_connection):
+def test_handles_missing_env_variables():
     with pytest.raises(KeyError):
         connect()
 
-# side_effect triggers InterfaceError
-# Invoke connect() and check 'raise' message matches
-@patch('src.extract.Connection', side_effect=InterfaceError())
+@patch('src.extract.Connection', side_effect=InterfaceError("Invalid credentials"))
 def test_handles_interface_errors(mock_connection, set_env_vars):
-    with pytest.raises(InterfaceError, match="Database interface error:"):
+    with pytest.raises(InterfaceError):
         connect()
 
-@patch('src.extract.Connection', side_effect=DatabaseError())
+@patch('src.extract.Connection', side_effect=DatabaseError("Database connection failed"))
 def test_handles_database_errors(mock_connection, set_env_vars):
-    with pytest.raises(DatabaseError, match="Failed to connect to db:"):
+    with pytest.raises(DatabaseError):
         connect()
 
-@patch('src.extract.Connection', side_effect=Error())
+@patch('src.extract.Connection', side_effect=Error("General pg8000 error"))
 def test_handles_general_errors(mock_connection, set_env_vars):
-    with pytest.raises(Error, match="pg8000 error:"):
+    with pytest.raises(Error):
         connect()
 
-@patch('src.extract.Connection', side_effect=Exception())
-def test_handles_general_errors(mock_connection, set_env_vars):
-    with pytest.raises(Exception, match="Unexpected error:"):
+@patch('src.extract.Connection', side_effect=Exception("General exception"))
+def test_handles_general_exceptions(mock_connection, set_env_vars):
+    with pytest.raises(Exception):
         connect()
