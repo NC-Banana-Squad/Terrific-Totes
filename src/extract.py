@@ -1,7 +1,9 @@
 from datetime import datetime
 from pprint import pprint
-from pg8000.native import Connection
-#from util_functions import connect, create_s3_client
+from pg8000.native import Connection, Error
+from pg8000.exceptions import InterfaceError, DatabaseError
+# from util_functions import connect, create_s3_client
+import logging
 import boto3
 import csv
 import dotenv
@@ -12,25 +14,68 @@ import logging
 
 bucket_name = 'banana-squad-code'
 
-def connect():
+# Giving logger the name of the module in which it is used (lambda_handler)
+logger = logging.getLogger(__name__)
+
+# '-> Connection' syntax just tells us this function returns a Connection
+def connect() -> Connection:
+    """Gets a Connection to the database.
+    Credentials are retrieved from environment variables.
+    Returns:
+        a database connection   
+    Raises:
+        DBConnectionException
+    """
+
     dotenv.load_dotenv()
 
-    user = os.environ['user']
-    database = os.environ['database']
-    password = os.environ['password']
-    host = os.environ['host']
-    port = os.environ['port']
+    try:
 
-    return Connection(
+        user = os.environ['user']
+        database = os.environ['database']
+        password = os.environ['password']
+        host = os.environ['host']
+        port = os.environ['port']
 
-        user=user,
-        database=database,
-        password=password,
-        host=host,
-        port=port
-    )
+        return Connection(
+
+            user=user,
+            database=database,
+            password=password,
+            host=host,
+            port=port
+        )
+
+    # Handles missing environment variables    
+    except KeyError as e:
+        logger.error(f"Missing environment variable: {e}")
+        raise KeyError(f"Missing environment variable: {e}")
+
+    # Handles connection issues (wrong credentials, network problems etc)
+    except InterfaceError as e:
+        logger.error(f"Database interface error: {e}")
+        raise InterfaceError(f"Database interface error: {e}")
+
+    # Handles errors related to database instructions
+    except DatabaseError as e:
+        logger.error(f"Failed to connect to db: {e}")
+        raise DatabaseError(f"Failed to connect to db: {e}")
+    
+    # Handles general pg8000 errors
+    except Error as e:
+        logger.error(f"pg8000 error: {e}")
+        raise Error(f"pg8000 error: {e}")
+    
+    # Catches any other general errors that could arise    
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise Exception(f"Unexpected error: {e}")
 
 def create_s3_client():
+
+    """
+    Add comment :)
+    """
     return boto3.client('s3')
 
 def create_file_name(table):
