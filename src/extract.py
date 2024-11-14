@@ -46,16 +46,10 @@ def connect() -> Connection:
 def create_s3_client():
 
     """
-    Add comment :)
+    Creates an S3 client using boto3
     """
-    try:
-        return boto3.client('s3')
-    except NoCredentialsError:
-        print("Error: AWS credentials not found.")
-        logger.error("Error: AWS credentials not found.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        logger.error(f"An error occurred: {e}")
+
+    return boto3.client('s3')
 
 def create_file_name(table):
 
@@ -96,7 +90,6 @@ def format_to_csv(rows, columns):
 
     return csv_buffer
 
-
 def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
     '''
     Uploads a CSV file (in memory) to an AWS S3 bucket.
@@ -128,7 +121,6 @@ def store_in_s3(s3_client, csv_buffer, bucket_name, file_name):
     except Exception as e:
         logging.error(f"An unexpected ClientError occurred: {e}")
         raise
-
 
 def lambda_handler(event, context):
     s3_client = create_s3_client()
