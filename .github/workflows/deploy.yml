@@ -45,7 +45,7 @@ jobs:
       - name: Terraform Init
         working-directory: terraform
         run: terraform init
-      - name: Terragotm Plan
+      - name: Terraform Plan
         working-directory: terraform
         run: terraform plan
       - name: Terraform Apply
