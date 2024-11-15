@@ -3,11 +3,19 @@ from pprint import pprint
 from pg8000.exceptions import InterfaceError, DatabaseError
 from botocore.exceptions import NoCredentialsError, ClientError
 
-from src.extract.util_functions import connect, create_s3_client, create_file_name, format_to_csv,store_in_s3
+from util_functions import (
+    connect,
+    create_s3_client,
+    create_file_name,
+    format_to_csv,
+    store_in_s3,
+)
 
 import logging
 
+store_bucket = "banana-squad-ingested-data"
 bucket_name = "banana-squad-code"
+
 logging.basicConfig(
     level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -52,14 +60,14 @@ def initial_extract():
 
         """Save the file like object to s3 bucket"""
         try:
-            store_in_s3(s3_client, csv_buffer, bucket_name, file_name)
-            return {"result": f"Object successfully created in {bucket_name} bucket"}
+            store_in_s3(s3_client, csv_buffer, store_bucket, file_name)
+            return {"result": f"Object successfully created in {store_bucket} bucket"}
 
         except Exception:
             logging.error(
-                f"Failure: the object {file_name} was not created in {bucket_name} bucket"
+                f"Failure: the object {file_name} was not created in {store_bucket} bucket"
             )
-            return {"result": f"Failed to create an object in {bucket_name} bucket"}
+            return {"result": f"Failed to create an object in {store_bucket} bucket"}
 
     conn.close()
 

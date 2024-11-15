@@ -4,7 +4,7 @@ from src.extract.util_functions import (
     format_to_csv,
     create_s3_client,
     connect,
-    create_file_name
+    create_file_name,
 )
 import pytest
 from unittest.mock import patch, MagicMock
@@ -23,14 +23,14 @@ class TestInitialExtract:
         mock_connect,
         mock_create_file_name,
         mock_format_to_csv,
-        mock_store_in_s3
+        mock_store_in_s3,
     ):
         mock_create_s3_client.return_value = MagicMock()
         mock_conn = MagicMock()
         mock_connect.return_value = mock_conn
         mock_conn.run.side_effect = [
             [{"table_name": "peaches"}],
-            [{"cost_of_peaches": 132}]
+            [{"cost_of_peaches": 132}],
         ]
         mock_conn.columns = [{"name": "cost_of_peaches"}]
         mock_create_file_name.return_value = "why_peaches.csv"
