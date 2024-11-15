@@ -1,6 +1,4 @@
 from datetime import datetime
-from pprint import pprint
-# from pg8000.native import Connection, Error
 import boto3
 import csv
 import dotenv
