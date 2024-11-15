@@ -16,9 +16,15 @@ resource "null_resource" "create_extract_layer_archive" {
 
   provisioner "local-exec" {
    command = <<EOT
-  mkdir -p ${path.module}/../extract_layer  # Ensure directory exists if not
-  cd ${path.module}/../extract_layer && zip -r ${path.module}/../extract_layer.zip ./*
-  EOT
+      layer_dir="${GITHUB_WORKSPACE}/extract_layer"
+      mkdir -p $layer_dir  # Ensure directory exists
+      # Ensure the install worked by checking files are in the directory
+      if [ "$(ls -A $layer_dir)" ]; then
+        cd $layer_dir && zip -r ${GITHUB_WORKSPACE}/extract_layer.zip ./*
+      else
+        echo "No files to zip, skipping..."
+      fi
+    EOT
   }
   # To make sure that extract layer archive is recreated(even when it's empty) on each run
   triggers = {
