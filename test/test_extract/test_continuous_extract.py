@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 from io import StringIO
 import pytest
+
 from src.extract.extract import continuous_extract, create_s3_client
 
 class TestContinuousExtract(unittest.TestCase):
@@ -56,3 +57,5 @@ class TestContinuousExtract(unittest.TestCase):
         
         # Verify S3 store operation was called
         mock_s3.put_object.assert_called()  # Verify file was stored in S3
+
+
