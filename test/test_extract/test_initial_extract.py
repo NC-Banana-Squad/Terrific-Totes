@@ -39,7 +39,7 @@ class TestInitialExtract:
 
         result = initial_extract(mock_create_s3_client, mock_conn)
         assert result == {
-            "result": f"Object successfully created in banana-squad-code bucket"
+            "result": f"Object successfully created in banana-squad-ingested-data bucket"
         }
 
     @patch("src.extract.extract.connect")
@@ -54,7 +54,7 @@ class TestInitialExtract:
             "Failed to create a client from create_client function: S3 client creation error"
         )
         assert result == {
-            "result": "Failed to create an object in banana-squad-code bucket"
+            "result": "Failed to create an object in banana-squad-ingested-data bucket"
         }
 
         assert not mock_connect.called
