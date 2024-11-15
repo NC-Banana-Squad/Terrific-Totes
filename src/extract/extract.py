@@ -19,7 +19,7 @@ def initial_extract():
         s3_client = create_s3_client()
     except Exception as e:
         logging.error(f"Failed to create a client from create_client function: {e}")
-
+        return {"result": "Failed to create an object in banana-squad-code bucket"}
     """Connect to database"""
     try:
         conn = connect()
