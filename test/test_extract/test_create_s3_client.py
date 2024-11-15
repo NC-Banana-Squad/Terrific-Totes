@@ -1,4 +1,4 @@
-from src.extract import create_s3_client
+from src.extract.extract import create_s3_client
 from moto import mock_aws
 from unittest.mock import patch
 from botocore.exceptions import NoCredentialsError

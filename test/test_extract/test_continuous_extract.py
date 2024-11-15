@@ -2,7 +2,7 @@ import pytest
 import boto3
 from moto import mock_aws
 from unittest.mock import patch, call
-from src.extract import continuous_extract, create_file_name, format_to_csv, store_in_s3
+from src.extract.extract import continuous_extract, create_file_name, format_to_csv, store_in_s3
 
 # Retrieving the last extracted timestamp from the last_extracted.txt file
 def test_continuous_extract_retrieves_last_extracted_timestamp():

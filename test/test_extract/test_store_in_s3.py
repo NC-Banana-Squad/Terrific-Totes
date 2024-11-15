@@ -1,4 +1,4 @@
-from src.extract import store_in_s3
+from src.extract.extract import store_in_s3
 from moto import mock_aws
 from io import StringIO 
 import boto3

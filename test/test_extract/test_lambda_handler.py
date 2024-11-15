@@ -1,4 +1,4 @@
-from src.extract import lambda_handler
+from src.extract.extract import lambda_handler
 from moto import mock_aws
 from unittest.mock import patch, MagicMock
 from botocore.exceptions import NoCredentialsError, ClientError

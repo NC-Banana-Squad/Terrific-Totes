@@ -1,4 +1,4 @@
-from src.extract import lambda_handler
+from src.extract.extract import lambda_handler
 
 class Test:
 

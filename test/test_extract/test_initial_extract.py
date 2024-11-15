@@ -1,4 +1,4 @@
-from src.extract import initial_extract, store_in_s3
+from src.extract.extract import initial_extract, store_in_s3
 import pytest
 from unittest.mock import patch, Mock
 
