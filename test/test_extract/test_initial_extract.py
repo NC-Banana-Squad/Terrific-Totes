@@ -1,4 +1,5 @@
-from src.extract.extract import initial_extract, store_in_s3
+from src.extract.extract import initial_extract
+from src.extract.util_functions import store_in_s3, format_to_csv, create_s3_client, connect, create_file_name
 import pytest
 from unittest.mock import patch, Mock
 
