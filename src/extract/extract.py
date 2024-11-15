@@ -154,4 +154,3 @@ def lambda_handler(event, context):
 
     return {"result": "Success"}
 
-lambda_handler(1,2)
