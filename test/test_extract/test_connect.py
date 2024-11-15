@@ -47,8 +47,9 @@ def test_connection_success(mock_dotenv, mock_connection):
 
 
 def test_handles_missing_env_variables():
-    with pytest.raises(KeyError):
-        connect()
+    with patch.dict("os.environ", {}, clear=True):
+        with pytest.raises(KeyError):
+            connect()
 
 
 @patch(
