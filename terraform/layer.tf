@@ -25,6 +25,27 @@ resource "null_resource" "create_extract_layer_archive" {
   }
 }
 
+# Define
+resource "aws_lambda_layer_version" "dependency_layer" {
+  layer_name          = "dependency_layer"
+  compatible_runtimes = [var.python_runtime]
+  s3_bucket           = aws_s3_bucket.code_bucket.bucket
+  s3_key              = aws_s3_object.extract_layer_code.key
+  depends_on = [null_resource.create_dependencies]
+  #source_code_hash = filebase64sha256("${path.module}/../extract_layer.zip")
+}
+
+
+  # Deletes zip file and extract layer folder content when terraform destroy
+resource "null_resource" "cleanup" {
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -rf ${path.module}/../extract_layer.zip ${path.module}/../extract_layer/python"
+  }
+}
+
+
+
 # data "null_data_source" "wait_for_lambda_exporter" {
 #   inputs = {
 #     # This ensures that this data resource will not be evaluated until
@@ -50,25 +71,3 @@ data "archive_file" "extract_layer" {
   output_path      = "${path.module}/../extract_layer.zip"
   depends_on = [null_resource.archive_trigger]
 } */
-
-
-# Define
-resource "aws_lambda_layer_version" "dependency_layer" {
-  layer_name          = "dependency_layer"
-  compatible_runtimes = [var.python_runtime]
-  s3_bucket           = aws_s3_bucket.code_bucket.bucket
-  s3_key              = aws_s3_object.extract_layer_code.key
-  depends_on = [null_resource.create_dependencies]
-  #source_code_hash = filebase64sha256("${path.module}/../extract_layer.zip")
-}
-
-
-  # Deletes zip file and extract layer folder content when terraform destroy
-resource "null_resource" "cleanup" {
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf ${path.module}/../extract_layer.zip ${path.module}/../extract_layer/python"
-  }
-}
-
-
