@@ -36,7 +36,7 @@ resource "aws_lambda_function" "extract" {
   role             = aws_iam_role.lambda_role.arn
   handler          = "extract.lambda_handler"
   depends_on = [null_resource.extract_lambda]
-  # source_code_hash = filebase64sha256("${path.module}/../src/extract/extract_lambda.py")
+  #source_code_hash = filebase64sha256("${path.module}/../src/extract/extract_lambda.zip")
   runtime          = var.python_runtime
   layers           = [aws_lambda_layer_version.dependency_layer.arn]
 }
