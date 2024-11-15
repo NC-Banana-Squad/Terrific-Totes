@@ -130,9 +130,6 @@ def lambda_handler(event, context):
         ):
             continuous_extract(s3_client, conn)
 
-        # if 'last_extracted.txt' in s3_client.list_objects(Bucket='banana-squad-code'):
-        #     continuous_extract(s3_client)
-
         else:
             initial_extract(s3_client, conn)
     except (InterfaceError, DatabaseError) as e:
