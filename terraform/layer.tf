@@ -1,8 +1,11 @@
 #Need to use --upgrade when targeting a folder so that the install overwrites functions.
 resource "null_resource" "create_dependencies" {
-    # Install Python dependencies listed in a extract_layer_requirements.txt
   provisioner "local-exec" {
-    command = "rm -rf ${path.module}/../extract_layer/python/* && pip install -r ${path.module}/../extract_layer_requirements.txt --upgrade -t ${path.module}/../extract_layer/python"
+    command = <<EOT
+      tmp_dir="${GITHUB_WORKSPACE}/temp_extract_layer"
+      rm -rf $tmp_dir/*
+      pip install -r ${path.module}/../extract_layer_requirements.txt --upgrade -t $tmp_dir
+    EOT
   }
   triggers = {
     dependencies = filemd5("${path.module}/../extract_layer_requirements.txt")
