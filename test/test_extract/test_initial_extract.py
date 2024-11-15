@@ -7,30 +7,17 @@ from src.extract.util_functions import (
     create_file_name
 )
 import pytest
-<<<<<<< Updated upstream
-from unittest.mock import patch, Mock
-=======
 from unittest.mock import patch, MagicMock
->>>>>>> Stashed changes
 
 
 class TestInitialExtract:
 
-<<<<<<< Updated upstream
-    @patch("src.extract.util_functions.store_in_s3")
-    @patch("src.extract.util_functions.format_to_csv")
-    @patch("src.extract.util_functions.create_file_name")
-    @patch("src.extract.util_functions.connect")
-    @patch("src.extract.util_functions.create_s3_client")
-    def xtest_returns_success_for_successful_run(
-=======
     @patch("src.extract.extract.store_in_s3")
     @patch("src.extract.extract.format_to_csv")
     @patch("src.extract.extract.create_file_name")
     @patch("src.extract.extract.connect")
     @patch("src.extract.extract.create_s3_client")
     def test_returns_success_for_successful_run(
->>>>>>> Stashed changes
         self,
         mock_create_s3_client,
         mock_connect,
@@ -55,14 +42,9 @@ class TestInitialExtract:
             "result": f"Object successfully created in banana-squad-code bucket"
         }
 
-<<<<<<< Updated upstream
-    @patch("src.extract.util_functions.create_s3_client")
-    def xtest_create_s3_client_failure(self, mock_create_s3_client):
-=======
     @patch("src.extract.extract.connect")
     @patch("src.extract.extract.create_s3_client")
     def test_create_s3_client_failure(self, mock_create_s3_client, mock_connect):
->>>>>>> Stashed changes
         mock_create_s3_client.side_effect = Exception("S3 client creation error")
 
         with patch("src.extract.extract.logging.error") as mock_error:
