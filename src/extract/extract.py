@@ -2,7 +2,7 @@ from datetime import datetime
 from pprint import pprint
 from pg8000.exceptions import InterfaceError, DatabaseError
 from botocore.exceptions import NoCredentialsError, ClientError
-from util_functions import (
+from .util_functions import (
     connect,
     create_s3_client,
     create_file_name,
