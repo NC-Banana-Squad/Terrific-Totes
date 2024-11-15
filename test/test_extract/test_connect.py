@@ -24,19 +24,15 @@ def set_env_vars():
 
 @patch("src.extract.util_functions.pg8000.Connection")
 @patch("src.extract.util_functions.dotenv.load_dotenv")
-def test_connection_success(mock_dotenv, mock_connection):
-    os.environ["user"] = "test_user"
-    os.environ["database"] = "test_db"
-    os.environ["password"] = "test_pass"
-    os.environ["host"] = "localhost"
-    os.environ["port"] = "5432"
+def test_connection_success(set_env_vars, mock_connection):
+
     mock_conn_instance = MagicMock()
     mock_connection.return_value = mock_conn_instance
 
     conn = connect()
 
     assert conn == mock_conn_instance
-    mock_dotenv.assert_called_once()
+    set_env_vars.assert_called_once()
     mock_connection.assert_called_once_with(
         user="test_user",
         database="test_db",
