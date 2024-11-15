@@ -37,7 +37,7 @@ class TestInitialExtract:
         mock_format_to_csv.return_value = MagicMock()
         mock_store_in_s3.return_value = None
 
-        result = initial_extract()
+        result = initial_extract(mock_create_s3_client, mock_conn)
         assert result == {
             "result": f"Object successfully created in banana-squad-code bucket"
         }
@@ -48,7 +48,7 @@ class TestInitialExtract:
         mock_create_s3_client.side_effect = Exception("S3 client creation error")
 
         with patch("src.extract.extract.logging.error") as mock_error:
-            result = initial_extract()
+            result = initial_extract(mock_create_s3_client, mock_connect)
 
         mock_error.assert_called_with(
             "Failed to create a client from create_client function: S3 client creation error"
