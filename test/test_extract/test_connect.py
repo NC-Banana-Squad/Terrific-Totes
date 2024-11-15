@@ -1,5 +1,5 @@
 # from src.util_functions import connect
-from src.extract.extract import connect
+from src.extract.util_functions import connect
 from unittest.mock import patch, MagicMock
 from pg8000.native import Error
 from pg8000.exceptions import InterfaceError, DatabaseError
