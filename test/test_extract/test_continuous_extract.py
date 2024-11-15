@@ -2,7 +2,8 @@ import pytest
 import boto3
 from moto import mock_aws
 from unittest.mock import patch, call
-from src.extract.extract import continuous_extract, create_file_name, format_to_csv, store_in_s3
+from src.extract.extract import continuous_extract
+from src.extract.util_functions import create_file_name, format_to_csv, store_in_s3
 
 # Retrieving the last extracted timestamp from the last_extracted.txt file
 def test_continuous_extract_retrieves_last_extracted_timestamp():
@@ -20,7 +21,7 @@ def s3_resource():
 
 @pytest.fixture
 def db_connection():
-    with patch('src.extract.connect') as mock_connect:
+    with patch('src.extract.util_functions.connect') as mock_connect:
         mock_db = mock_connect.return_value
         mock_db.run.side_effect = [
             [{'table_name': 'users'}, {'table_name': 'orders'}],
@@ -31,9 +32,9 @@ def db_connection():
         yield mock_db
 
 def test_continuous_extract_successful_flow(s3_resource, db_connection):
-    with patch('src.extract.create_file_name') as mock_create_file_name, \
-         patch('src.extract.format_to_csv') as mock_format_to_csv, \
-         patch('src.extract.store_in_s3') as mock_store_in_s3:
+    with patch('src.extract.util_functions.create_file_name') as mock_create_file_name, \
+         patch('src.extract.util_functions.format_to_csv') as mock_format_to_csv, \
+         patch('src.extract.util_functions.store_in_s3') as mock_store_in_s3:
         mock_create_file_name.side_effect = lambda table: f"{table['table_name']}_export.csv"
         mock_format_to_csv.return_value = 'csv_data'
 

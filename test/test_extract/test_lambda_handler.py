@@ -21,14 +21,14 @@ def set_env_vars():
         yield
 
 def test_lambda_handler_no_aws_credentials():
-    with patch('src.extract.create_s3_client') as mock_create_s3_client:
+    with patch('src.extract.util_functions.create_s3_client') as mock_create_s3_client:
         mock_create_s3_client.side_effect = NoCredentialsError
         response = lambda_handler({},{})
         assert response == {"result": "Failure",
                             "error": "AWS credentials not found. Unable to create S3 client"}
 
 def test_lambda_handler_s3_client_error(set_env_vars):
-    with patch('src.extract.create_s3_client') as mock_create_s3_client:
+    with patch('src.extract.util_functions.create_s3_client') as mock_create_s3_client:
         mock_s3_client = MagicMock()
 
         mock_s3_client.list_objects.side_effect = ClientError({},'ListObjects')
