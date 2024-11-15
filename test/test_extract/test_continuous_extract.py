@@ -5,7 +5,7 @@ from io import StringIO
 import pytest
 
 from src.extract.extract import continuous_extract
-# from src.extract.util_functions import create_s3_client, connect
+from src.extract.util_functions import create_s3_client, connect
 
 class TestContinuousExtract(unittest.TestCase):
     def setUp(self):
