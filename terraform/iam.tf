@@ -31,12 +31,22 @@ resource "aws_iam_policy" "lambda_policy" {
       {
         Action = ["s3:GetObject"],
         Effect = "Allow",
-        Resource = "arn:aws:s3:::code_bucket/*"
+        Resource = "arn:aws:s3:::banana-squad-code"
+      },
+      {
+        Action = ["s3:ListObject"],
+        Effect = "Allow",
+        Resource = "arn:aws:s3:::banana-squad-code"
       },
       {
         Action = ["s3:PutObject"],
         Effect = "Allow",
         Resource = "arn:aws:s3:::injested_data_bucket/*"
+      },
+      {
+        Action = ["s3:PutObject"],
+        Effect = "Allow",
+        Resource = "arn:aws:s3:::banana-squad-code"
       },
       {
         Action = [
