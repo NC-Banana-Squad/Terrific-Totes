@@ -14,7 +14,7 @@ def test_create_s3_client_success():
     assert hasattr(s3_client, "list_buckets")
 
 
-@patch("src.extract.boto3.client")
+@patch("src.extract.util_functions.boto3.client")
 def test_create_s3_no_credentials(mock_boto_client):
 
     # Simulates an error caused by no credentials being provided
