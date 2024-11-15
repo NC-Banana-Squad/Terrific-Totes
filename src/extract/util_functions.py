@@ -1,14 +1,15 @@
 from datetime import datetime
 from pprint import pprint
-from pg8000.native import Connection, Error
+# from pg8000.native import Connection, Error
 import boto3
 import csv
 import dotenv
 import os
 import io
+import pg8000
 
 
-def connect() -> Connection:
+def connect():
     """Gets a Connection to the database.
     Credentials are retrieved from environment variables.
     Returns:
@@ -23,9 +24,13 @@ def connect() -> Connection:
     host = os.environ["host"]
     port = os.environ["port"]
 
-    return Connection(
+    return pg8000.connection(
         user=user, database=database, password=password, host=host, port=port
     )
+
+    # return Connection(
+    #     user=user, database=database, password=password, host=host, port=port
+    # )
 
 
 def create_s3_client():

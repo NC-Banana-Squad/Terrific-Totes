@@ -2,7 +2,6 @@ from datetime import datetime
 from pprint import pprint
 from pg8000.exceptions import InterfaceError, DatabaseError
 from botocore.exceptions import NoCredentialsError, ClientError
-
 from util_functions import (
     connect,
     create_s3_client,
@@ -10,30 +9,20 @@ from util_functions import (
     format_to_csv,
     store_in_s3,
 )
-
 import logging
+import sys
 
-store_bucket = "banana-squad-ingested-data"
-bucket_name = "banana-squad-code"
+sys.path.insert(0, '*/Terrific-Totes/src/extract')
+
+data_bucket = "banana-squad-ingested-data"
+code_bucket = "banana-squad-code"
 
 logging.basicConfig(
     level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
-def initial_extract():
-    """Create s3 client"""
-    try:
-        s3_client = create_s3_client()
-    except Exception as e:
-        logging.error(f"Failed to create a client from create_client function: {e}")
-        return {"result": "Failed to create an object in banana-squad-code bucket"}
-    """Connect to database"""
-    try:
-        conn = connect()
-    except Exception as de:
-        logging.error(f"Failed to connect to the database:{de}")
-
+def initial_extract(s3_client, conn):
     """Get public table names from the database"""
     try:
         query = conn.run(
@@ -60,23 +49,21 @@ def initial_extract():
 
         """Save the file like object to s3 bucket"""
         try:
-            store_in_s3(s3_client, csv_buffer, store_bucket, file_name)
-            return {"result": f"Object successfully created in {store_bucket} bucket"}
+            store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
+            return {"result": f"Object successfully created in {data_bucket} bucket"}
 
         except Exception:
             logging.error(
-                f"Failure: the object {file_name} was not created in {store_bucket} bucket"
+                f"Failure: the object {file_name} was not created in {data_bucket} bucket"
             )
-            return {"result": f"Failed to create an object in {store_bucket} bucket"}
+            return {"result": f"Failed to create an object in {data_bucket} bucket"}
 
     conn.close()
 
 
-def continuous_extract():
-    s3_client = create_s3_client()
-    conn = connect()
+def continuous_extract(s3_client, conn):
 
-    response = s3_client.get_object(Bucket=bucket_name, Key="last_extracted.txt")
+    response = s3_client.get_object(Bucket=code_bucket, Key="last_extracted.txt")
     readable_content = response["Body"].read().decode("utf-8")
 
     query = conn.run(
@@ -90,7 +77,7 @@ def continuous_extract():
 
         if rows:
             csv_buffer = format_to_csv(rows, columns)
-            store_in_s3(s3_client, csv_buffer, bucket_name, file_name)
+            store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
 
     conn.close()
     return {"result": "Success"}
@@ -109,19 +96,24 @@ def lambda_handler(event, context):
     except ClientError as e:
         logging.error(f"Error creating S3 client: {e}")
         return {"result": "Failure", "error": "Error creating S3 client"}
+    
+    try:
+        conn = connect()
+    except Exception as de:
+        logging.error(f"Failed to connect to the database:{de}")
 
     try:
-        response = s3_client.list_objects(Bucket="banana-squad-code")
+        response = s3_client.list_objects(Bucket=code_bucket)
         if "Contents" in response and any(
             obj["Key"] == "last_extracted.txt" for obj in response["Contents"]
         ):
-            continuous_extract(s3_client)
+            continuous_extract(s3_client, conn)
 
         # if 'last_extracted.txt' in s3_client.list_objects(Bucket='banana-squad-code'):
         #     continuous_extract(s3_client)
 
         else:
-            initial_extract(s3_client)
+            initial_extract(s3_client, conn)
     except (InterfaceError, DatabaseError) as e:
         logging.error(f"Error during data extraction: {e}")
         return {"result": "Failure", "error": "Error during data extraction"}
@@ -129,7 +121,7 @@ def lambda_handler(event, context):
     try:
         last_extracted = datetime.now().isoformat().replace("T", " ")
         s3_client.put_object(
-            Body=last_extracted, Bucket="banana-squad-code", Key="last_extracted.txt"
+            Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
         )
     except ClientError as e:
         logging.error(f"Error updating last_extracted.txt: {e}")
