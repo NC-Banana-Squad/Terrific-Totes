@@ -1,70 +1,58 @@
+import unittest
+from unittest.mock import patch, MagicMock
+from datetime import datetime
+from io import StringIO
 import pytest
-import boto3
-from moto import mock_aws
-from unittest.mock import patch, call
-from src.extract import continuous_extract, create_file_name, format_to_csv, store_in_s3
+from src.extract.extract import continuous_extract
 
-# Retrieving the last extracted timestamp from the last_extracted.txt file
-def test_continuous_extract_retrieves_last_extracted_timestamp():
-    pass
-
-# Formatting
-@pytest.fixture
-def s3_resource():
-    with mock_aws():
-        s3_client = boto3.client('s3', region_name='us-east-1')
-        s3_client.create_bucket(Bucket='banana-squad-code')
-        s3_client.put_object(Body=b'2024-01-01')
-        s3_client.get_object('banana-squad-code', 'last_extracted.txt')
-        yield s3_client
-
-@pytest.fixture
-def db_connection():
-    with patch('src.extract.connect') as mock_connect:
-        mock_db = mock_connect.return_value
-        mock_db.run.side_effect = [
-            [{'table_name': 'users'}, {'table_name': 'orders'}],
-            [{'id': 1, 'created_at': '2024-01-02'}],
-            [{'id': 2, 'created_at': '2024-01-02'}]
+class TestContinuousExtract(unittest.TestCase):
+    def setUp(self):
+        # Mock data for testing
+        self.mock_table_data = [('table1',)]
+        self.mock_rows = [
+            {'id': 1, 'name': 'Test', 'created_at': '2024-01-01 00:00:00'},
+            {'id': 2, 'name': 'Test2', 'created_at': '2024-01-02 00:00:00'}
         ]
-        mock_db.columns = [{'name': 'id'}, {'name': 'created_at'}]
-        yield mock_db
-
-def test_continuous_extract_successful_flow(s3_resource, db_connection):
-    with patch('src.extract.create_file_name') as mock_create_file_name, \
-         patch('src.extract.format_to_csv') as mock_format_to_csv, \
-         patch('src.extract.store_in_s3') as mock_store_in_s3:
-        mock_create_file_name.side_effect = lambda table: f"{table['table_name']}_export.csv"
-        mock_format_to_csv.return_value = 'csv_data'
-
+        self.mock_columns = [{'name': 'id'}, {'name': 'name'}, {'name': 'created_at'}]
+        
+    @patch('your_module.create_s3_client')
+    @patch('your_module.connect')
+    def test_continuous_extract_successful_extraction(self, mock_connect, mock_create_s3_client):
+        # Set up mock S3 client
+        mock_s3 = MagicMock()
+        mock_create_s3_client.return_value = mock_s3
+        
+        # Mock S3 get_object response
+        mock_s3.get_object.return_value = {
+            'Body': MagicMock(
+                read=lambda: '2024-01-01 00:00:00'.encode('utf-8')
+            )
+        }
+        
+        # Set up mock database connection
+        mock_conn = MagicMock()
+        mock_connect.return_value = mock_conn
+        
+        # Mock database query responses
+        mock_conn.run.side_effect = [
+            self.mock_table_data,  # Response for table names query
+            self.mock_rows         # Response for data query
+        ]
+        mock_conn.columns = self.mock_columns
+        
+        # Execute the function
         result = continuous_extract()
-
-        assert result == {"result": "Success"}
-
-        # Verify S3 interactions
-        s3_resource.Object('banana-squad-code', 'last_extracted.txt').get.assert_called_once()
-
-        # Verify database queries
-        expected_db_calls = [
-            call('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' AND table_name != \'_prisma_migrations\''),
-            call('SELECT * FROM users WHERE created_at > 2024-01-01'),
-            call('SELECT * FROM orders WHERE created_at > 2024-01-01')
-        ]
-        assert db_connection.run.call_args_list == expected_db_calls
-
-        # Verify file creation and storage
-        assert mock_create_file_name.call_args_list == [
-            call({'table_name': 'users'}),
-            call({'table_name': 'orders'})
-        ]
-        assert mock_format_to_csv.call_args_list == [
-            call([{'id': 1, 'created_at': '2024-01-02'}], [{'name': 'id'}, {'name': 'created_at'}]),
-            call([{'id': 2, 'created_at': '2024-01-02'}], [{'name': 'id'}, {'name': 'created_at'}])
-        ]
-        assert mock_store_in_s3.call_args_list == [
-            call(s3_resource, 'csv_data', 'banana-squad-code', 'users_export.csv'),
-            call(s3_resource, 'csv_data', 'banana-squad-code', 'orders_export.csv')
-        ]
-
-        # Verify connection was closed
-        db_connection.close.assert_called_once()
+        
+        # Assertions
+        self.assertEqual(result, {"result": "Success"})
+        mock_s3.get_object.assert_called_once_with(
+            Bucket='banana-squad-code',
+            Key='last_extracted.txt'
+        )
+        
+        # Verify database queries were made
+        self.assertEqual(mock_conn.run.call_count, 2)
+        mock_conn.close.assert_called_once()
+        
+        # Verify S3 store operation was called
+        mock_s3.put_object.assert_called()  # Verify file was stored in S3
