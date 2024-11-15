@@ -11,4 +11,4 @@ mypy-extensions==1.0.0
 pg8000
 pandas
 python-dotenv
-pytest-cov==6.0.0
+pytest-cov
