@@ -22,25 +22,27 @@ def set_env_vars():
         yield
 
 
-@patch("src.extract.util_functions.connect")
-def test_connection_success(mock_connection, set_env_vars):
-
-    # Create the mock connection and connect to it
+@patch("src.extract.util_functions.pg8000.Connection")
+@patch("src.extract.util_functions.dotenv.load_dotenv")
+def test_connection_success(mock_dotenv, mock_connection):
+    os.environ["user"] = "test_user"
+    os.environ["database"] = "test_db"
+    os.environ["password"] = "test_pass"
+    os.environ["host"] = "localhost"
+    os.environ["port"] = "5432"
     mock_conn_instance = MagicMock()
     mock_connection.return_value = mock_conn_instance
 
     conn = connect()
 
     assert conn == mock_conn_instance
-
-    # Check mock credentials were used (once)
-    # conn = connect() # uncomment this to cause test to fail
+    mock_dotenv.assert_called_once()
     mock_connection.assert_called_once_with(
         user="test_user",
         database="test_db",
         password="test_pass",
         host="localhost",
-        port="5432",
+        port="5432"
     )
 
 
