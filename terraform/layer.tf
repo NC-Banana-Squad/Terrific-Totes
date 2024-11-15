@@ -32,7 +32,7 @@ resource "aws_lambda_layer_version" "dependency_layer" {
   compatible_runtimes = [var.python_runtime]
   s3_bucket           = aws_s3_bucket.code_bucket.bucket
   s3_key              = aws_s3_object.extract_layer_code.key
-  depends_on = [null_resource.create_dependencies]
+  #depends_on = [null_resource.create_dependencies]
   #source_code_hash = filebase64sha256("${path.module}/../extract_layer.zip")
 }
 
