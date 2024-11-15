@@ -11,6 +11,10 @@ from .util_functions import (
 )
 import logging
 import sys
+import os 
+
+print(os.getenv('aws-access-key-id') != None)
+print(os.getenv('AWS_ACCESS_KEY_ID') != None)
 
 sys.path.insert(0, '*/Terrific-Totes/src/extract')
 
@@ -39,7 +43,7 @@ def initial_extract(s3_client, conn):
         conn = connect()
     except Exception as de:
         logging.error(f"Failed to connect to the database:{de}")
-        
+
     """Get public table names from the database"""
     try:
         query = conn.run(
