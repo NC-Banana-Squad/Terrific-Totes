@@ -132,3 +132,5 @@ def lambda_handler(event, context):
         return {"result": "Failure", "error": "Unexpected error"}
 
     return {"result": "Success"}
+
+lambda_handler(1,2)
