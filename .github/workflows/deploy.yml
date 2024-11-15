@@ -2,7 +2,7 @@ name: CI-Pipeline
 on:
   push:
     branches:
-      - main
+      - terraform
 jobs:
   run-tests:
     #if: false # this will cause the job to be skipped - delete to enable
