@@ -62,7 +62,7 @@ def test_handles_interface_errors(mock_connection, set_env_vars):
 
 
 @patch(
-    "src.extract.util_functions.connect",
+    "src.extract.util_functions.pg8000.Connection",
     side_effect=DatabaseError("Database connection failed"),
 )
 def test_handles_database_errors(mock_connection, set_env_vars):
