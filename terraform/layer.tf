@@ -1,24 +1,23 @@
-#Need to use --upgrade when targeting a folder so that the install overwrites functions.
 resource "null_resource" "create_dependencies" {
   provisioner "local-exec" {
     command = <<EOT
-      tmp_dir="${GITHUB_WORKSPACE}/temp_extract_layer"
-      rm -rf $tmp_dir/*
-      pip install -r ${path.module}/../extract_layer_requirements.txt --upgrade -t $tmp_dir
+      rm -rf ${path.module}/../extract_layer/python/*
+      pip install -r ${path.module}/../extract_layer_requirements.txt --upgrade -t ${path.module}/../extract_layer/python
     EOT
+    environment = {
+      GITHUB_WORKSPACE = "${path.module}"  # Set the environment variable for the current workspace
+    }
   }
   triggers = {
     dependencies = filemd5("${path.module}/../extract_layer_requirements.txt")
   }
 }
 
-
-  #Creates zip file after create_dependencies
 resource "null_resource" "create_extract_layer_archive" {
   depends_on = [null_resource.create_dependencies]
 
   provisioner "local-exec" {
-   command = <<EOT
+    command = <<EOT
       layer_dir="${GITHUB_WORKSPACE}/extract_layer"
       mkdir -p $layer_dir  # Ensure directory exists
       # Ensure the install worked by checking files are in the directory
@@ -28,22 +27,23 @@ resource "null_resource" "create_extract_layer_archive" {
         echo "No files to zip, skipping..."
       fi
     EOT
+    environment = {
+      GITHUB_WORKSPACE = "${path.module}"  # Pass the current module path as environment variable
+    }
   }
-  # To make sure that extract layer archive is recreated(even when it's empty) on each run
   triggers = {
-    archive_created = timestamp() 
+    archive_created = timestamp()
   }
 }
 
-# Define
 resource "aws_lambda_layer_version" "dependency_layer" {
   layer_name          = "dependency_layer"
   compatible_runtimes = [var.python_runtime]
   s3_bucket           = aws_s3_bucket.code_bucket.bucket
   s3_key              = aws_s3_object.extract_layer_code.key
   depends_on = [null_resource.create_dependencies]
-  #source_code_hash = filebase64sha256("${path.module}/../extract_layer.zip")
 }
+
 
 
   # Deletes zip file and extract layer folder content when terraform destroy
