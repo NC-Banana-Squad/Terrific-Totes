@@ -46,13 +46,14 @@ class TestInitialExtract:
     @patch("src.extract.extract.create_s3_client")
     def test_create_s3_client_failure(self, mock_create_s3_client, mock_connect):
         mock_create_s3_client.side_effect = Exception("S3 client creation error")
-
+        print("dupa")
         with patch("src.extract.extract.logging.error") as mock_error:
             result = initial_extract(mock_create_s3_client, mock_connect)
-
+        print("dupa1")
         mock_error.assert_called_with(
             "Failed to create a client from create_client function: S3 client creation error"
         )
+        print("dupa2")
         assert result == {
             "result": "Failed to create an object in banana-squad-ingested-data bucket"
         }
