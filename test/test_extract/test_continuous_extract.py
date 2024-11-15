@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 from io import StringIO
 import pytest
-from src.extract.extract import continuous_extract
+from src.extract.extract import continuous_extract, create_s3_client
 
 class TestContinuousExtract(unittest.TestCase):
     def setUp(self):
@@ -15,8 +15,8 @@ class TestContinuousExtract(unittest.TestCase):
         ]
         self.mock_columns = [{'name': 'id'}, {'name': 'name'}, {'name': 'created_at'}]
         
-    @patch('your_module.create_s3_client')
-    @patch('your_module.connect')
+    @patch('src.extract.extract.create_s3_client')
+    @patch('src.extract.extract.connect')
     def test_continuous_extract_successful_extraction(self, mock_connect, mock_create_s3_client):
         # Set up mock S3 client
         mock_s3 = MagicMock()
