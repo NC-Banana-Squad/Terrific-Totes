@@ -15,9 +15,10 @@ resource "null_resource" "create_extract_layer_archive" {
   depends_on = [null_resource.create_dependencies]
 
   provisioner "local-exec" {
-    command = <<EOT
-      cd ${path.module}/../extract_layer && zip -r ${path.module}/../extract_layer.zip ./*
-    EOT
+   command = <<EOT
+  mkdir -p ${path.module}/../extract_layer  # Ensure directory exists if not
+  cd ${path.module}/../extract_layer && zip -r ${path.module}/../extract_layer.zip ./*
+  EOT
   }
   # To make sure that extract layer archive is recreated(even when it's empty) on each run
   triggers = {
