@@ -29,25 +29,30 @@ resource "aws_iam_policy" "lambda_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = ["s3:GetObject"],
+        Action = ["s3:GetObject", "s3:ListBucket", "s3:ListObject", "s3:PutObject"],
         Effect = "Allow",
         Resource = "arn:aws:s3:::banana-squad-code"
       },
-      {
-        Action = ["s3:ListObject"],
-        Effect = "Allow",
-        Resource = "arn:aws:s3:::banana-squad-code"
-      },
+      # {
+      #   Action = ["s3:ListBucket"],
+      #   Effect = "Allow",
+      #   Resource = "arn:aws:s3:::banana-squad-code/*"
+      # },
+      # {
+      #   Action = ["s3:ListObject"],
+      #   Effect = "Allow",
+      #   Resource = "arn:aws:s3:::banana-squad-code/*"
+      # },
       {
         Action = ["s3:PutObject"],
         Effect = "Allow",
-        Resource = "arn:aws:s3:::injested_data_bucket/*"
+        Resource = "arn:aws:s3:::injested_data_bucket"
       },
-      {
-        Action = ["s3:PutObject"],
-        Effect = "Allow",
-        Resource = "arn:aws:s3:::banana-squad-code"
-      },
+      # {
+      #   Action = ["s3:PutObject"],
+      #   Effect = "Allow",
+      #   Resource = "arn:aws:s3:::banana-squad-code/*"
+      # },
       {
         Action = [
           "logs:CreateLogGroup",
@@ -55,7 +60,7 @@ resource "aws_iam_policy" "lambda_policy" {
           "logs:PutLogEvents"
         ],
         Effect = "Allow",
-        Resource = "arn:aws:logs:eu-west-2:log-group:/aws/lambda/*"
+        Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/extract:*"
       }
     ]
   })
