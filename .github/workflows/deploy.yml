@@ -57,18 +57,14 @@ jobs:
 
       - name: Lambda Layer Packaging
         run: |
-          # Ensure dependencies are installed in the folder for the Lambda layer
           rm -rf extract_layer/python
           mkdir -p extract_layer/python
           pip install -r extract_layer_requirements.txt -t extract_layer/python/
-          
-          # Package the Lambda layer
           cd extract_layer && zip -r ../extract_layer.zip ./*
 
       - name: Upload Lambda Layer to S3
         run: |
-          # Upload the packaged Lambda layer zip file to S3
-          aws s3 cp extract_layer.zip s3://your-s3-bucket/extract_layer.zip
+          aws s3 cp extract_layer.zip s3://banana-squad-ingested-data/extract_layer.zip
 
       - name: Terraform Apply
         working-directory: terraform
