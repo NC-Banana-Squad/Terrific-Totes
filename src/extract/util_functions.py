@@ -4,7 +4,7 @@ import csv
 #import dotenv
 import os
 import io
-import pg8000
+from pg8000.native import Connection
 import json
 
 def get_secret(secret_name, region_name=None):
@@ -48,7 +48,7 @@ def connect():
     host = secret["host"]
     port = secret["port"]
 
-    return pg8000.connect(
+    return Connection(
         user=user, database=database, password=password, host=host, port=port
     )
 

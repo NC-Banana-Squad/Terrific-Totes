@@ -17,4 +17,4 @@ venv/
 **/.terraform*
 *.tfstate*
 .env
-/extract_layer
+/extract_layer/python 
