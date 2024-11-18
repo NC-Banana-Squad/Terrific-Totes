@@ -25,25 +25,25 @@ def set_env_vars():
         yield
 
 
-def xtest_lambda_handler_no_aws_credentials():
-    with patch("src.extract.util_functions.create_s3_client") as mock_create_s3_client:
-        mock_create_s3_client.side_effect = NoCredentialsError
-        response = lambda_handler({}, {})
-        assert response == {
-            "result": "Failure",
-            "error": "AWS credentials not found. Unable to create S3 client",
-        }
+# def xtest_lambda_handler_no_aws_credentials():
+#     with patch("src.extract.util_functions.create_s3_client") as mock_create_s3_client:
+#         mock_create_s3_client.side_effect = NoCredentialsError
+#         response = lambda_handler({}, {})
+#         assert response == {
+#             "result": "Failure",
+#             "error": "AWS credentials not found. Unable to create S3 client",
+#         }
 
 
-def xtest_lambda_handler_s3_client_error(set_env_vars):
-    with patch("src.extract.util_functions.create_s3_client") as mock_create_s3_client:
-        mock_s3_client = MagicMock()
+# def xtest_lambda_handler_s3_client_error(set_env_vars):
+#     with patch("src.extract.util_functions.create_s3_client") as mock_create_s3_client:
+#         mock_s3_client = MagicMock()
 
-        mock_s3_client.list_objects.side_effect = ClientError({}, "ListObjects")
+#         mock_s3_client.list_objects.side_effect = ClientError({}, "ListObjects")
 
-        mock_create_s3_client.return_value = mock_s3_client
-        response = lambda_handler({}, {})
-        assert response == {"result": "Failure", "error": "Error creating S3 client"}
+#         mock_create_s3_client.return_value = mock_s3_client
+#         response = lambda_handler({}, {})
+#         assert response == {"result": "Failure", "error": "Error creating S3 client"}
 
  # Can be used as a template for Lambda Handler - not required here as 'initial extract' shouldn't be worrying about client creation failure
     
