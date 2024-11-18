@@ -29,7 +29,7 @@ resource "aws_iam_policy" "lambda_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = ["s3:GetObject", "s3:ListBucket", "s3:ListObject", "s3:PutObject"],
+        Action = ["s3:GetObject", "s3:ListBucket", "s3:PutObject"],
         Effect = "Allow",
         Resource = "arn:aws:s3:::banana-squad-code"
       },
