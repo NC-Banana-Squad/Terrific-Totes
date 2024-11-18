@@ -31,7 +31,7 @@ resource "aws_iam_policy" "lambda_policy" {
       {
         Action = ["s3:GetObject", "s3:ListBucket", "s3:PutObject"],
         Effect = "Allow",
-        Resource = "arn:aws:s3:::banana-squad-code"
+        Resource = "arn:aws:s3:::banana-squad-code/*"
       },
       # {
       #   Action = ["s3:ListBucket"],
@@ -46,7 +46,7 @@ resource "aws_iam_policy" "lambda_policy" {
       {
         Action = ["s3:PutObject"],
         Effect = "Allow",
-        Resource = "arn:aws:s3:::ingested_data_bucket"
+        Resource = "arn:aws:s3:::ingested_data_bucket/*"
       },
       # {
       #   Action = ["s3:PutObject"],
