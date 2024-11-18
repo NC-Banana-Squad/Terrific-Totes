@@ -36,7 +36,7 @@ resource "aws_s3_object" "extract_lambda_code" {
   key    = "extract_lambda_function.zip"
   source = "${path.module}/../src/extract/extract_lambda.zip"
   #etag = filemd5(null_resource.extract_lambda)
-  depends_on = [null_resource.extract_lambda]
+  # depends_on = [null_resource.extract_lambda] 
 }
 
 /* resource "aws_s3_object" "extract_layer_code" {
