@@ -4,6 +4,11 @@ data "archive_file" "extract_lambda" {
   output_file_mode = "0666"
 
   source {
+    content  = file("${path.module}/../src/extract/__init__.py")
+    filename = "__init__.py"
+  }
+
+  source {
     content  = file("${path.module}/../src/extract/extract.py")
     filename = "extract.py"
   }
