@@ -140,5 +140,3 @@ def lambda_handler(event, context):
         return {"result": "Failure", "error": "Unexpected error"}
 
     return {"result": "Success"}
-
-print(lambda_handler({}, {}))
