@@ -16,7 +16,7 @@ import os
 print(os.getenv('aws-access-key-id') != None)
 print(os.getenv('AWS_ACCESS_KEY_ID') != None)
 
-sys.path.insert(0, '*/Terrific-Totes/src/extract')
+# sys.path.insert(0, '*/Terrific-Totes/src/extract')
 
 data_bucket = "banana-squad-ingested-data"
 code_bucket = "banana-squad-code"
