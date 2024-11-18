@@ -61,7 +61,7 @@ resource "aws_iam_policy" "lambda_policy" {
       {
         Action = ["secretsmanager:GetSecretValue"],
         Effect = "Allow",
-        Resource = "arn:aws:secretsmanager:::database_credentials"
+        Resource = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:database_credentials*"
       }
     ]
   })
