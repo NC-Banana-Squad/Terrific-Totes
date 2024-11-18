@@ -27,22 +27,6 @@ logging.basicConfig(
 
 
 def initial_extract(s3_client, conn):
-    # try:
-    #     s3_client = create_s3_client()
-    # except NoCredentialsError:
-    #     logging.error("AWS credentials not found. Unable to create S3 client")
-    #     return {
-    #         "result": "Failure",
-    #         "error": "AWS credentials not found. Unable to create S3 client",
-    #     }
-    # except ClientError as e:
-    #     logging.error(f"Error creating S3 client: {e}")
-    #     return {"result": "Failure", "error": "Error creating S3 client"}
-    
-    # try:
-    #     conn = connect()
-    # except Exception as de:
-    #     logging.error(f"Failed to connect to the database:{de}")
 
     """Get public table names from the database"""
     try:

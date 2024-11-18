@@ -44,3 +44,23 @@ def xtest_lambda_handler_s3_client_error(set_env_vars):
         mock_create_s3_client.return_value = mock_s3_client
         response = lambda_handler({}, {})
         assert response == {"result": "Failure", "error": "Error creating S3 client"}
+
+ # Can be used as a template for Lambda Handler - not required here as 'initial extract' shouldn't be worrying about client creation failure
+    
+    # @patch("src.extract.extract.connect")
+    # @patch("src.extract.extract.create_s3_client")
+    # def test_create_s3_client_failure(self, mock_create_s3_client, mock_connect):
+    #     mock_create_s3_client.side_effect = Exception("S3 client creation error")
+    #     print("dupa")
+    #     with patch("src.extract.extract.logging.error") as mock_error:
+    #         result = initial_extract(mock_create_s3_client, mock_connect)
+    #     print("dupa1")
+    #     mock_error.assert_called_with(
+    #         "Failed to create a client from create_client function: S3 client creation error"
+    #     )
+    #     print("dupa2")
+    #     assert result == {
+    #         "result": "Failed to create an object in banana-squad-ingested-data bucket"
+    #     }
+
+    #     assert not mock_connect.called
