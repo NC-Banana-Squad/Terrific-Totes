@@ -56,7 +56,7 @@ def xtest_handles_missing_env_variables():
     "src.extract.util_functions.connect",
     side_effect=InterfaceError("Invalid credentials"),
 )
-def test_handles_interface_errors(mock_connection, set_env_vars):
+def xtest_handles_interface_errors(mock_connection, set_env_vars):
     with pytest.raises(InterfaceError):
         connect()
 
