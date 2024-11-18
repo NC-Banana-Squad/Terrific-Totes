@@ -1,6 +1,4 @@
 from datetime import datetime
-from pprint import pprint
-# from pg8000.native import Connection, Error
 import boto3
 import csv
 import dotenv
@@ -24,7 +22,7 @@ def connect():
     host = os.environ["host"]
     port = os.environ["port"]
 
-    return pg8000.connection(
+    return pg8000.Connection(
         user=user, database=database, password=password, host=host, port=port
     )
 

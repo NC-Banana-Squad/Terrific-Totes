@@ -55,7 +55,7 @@ resource "aws_s3_object" "extract_layer_code" {
   key    = "extract_layer_code.zip"
   source = "${path.module}/../extract_layer.zip"
   #etag   = filemd5("${path.module}/../extract_layer.zip")
-  depends_on = [null_resource.create_extract_layer_archive]
+  #depends_on = [null_resource.create_extract_layer_archive]
 }
 
 

@@ -22,35 +22,38 @@ def set_env_vars():
         yield
 
 
-@patch("src.extract.util_functions.Connection")
-def test_connection_success(mock_connection, set_env_vars):
-
-    # Create the mock connection and connect to it
+@patch("src.extract.util_functions.pg8000.Connection")
+@patch("src.extract.util_functions.dotenv.load_dotenv")
+def test_connection_success(mock_dotenv, mock_connection):
+    os.environ["user"] = "test_user"
+    os.environ["database"] = "test_db"
+    os.environ["password"] = "test_pass"
+    os.environ["host"] = "localhost"
+    os.environ["port"] = "5432"
     mock_conn_instance = MagicMock()
     mock_connection.return_value = mock_conn_instance
 
     conn = connect()
 
     assert conn == mock_conn_instance
-
-    # Check mock credentials were used (once)
-    # conn = connect() # uncomment this to cause test to fail
+    mock_dotenv.assert_called_once()
     mock_connection.assert_called_once_with(
         user="test_user",
         database="test_db",
         password="test_pass",
         host="localhost",
-        port="5432",
+        port="5432"
     )
 
 
 def test_handles_missing_env_variables():
-    with pytest.raises(KeyError):
-        connect()
+    with patch.dict("os.environ", {}, clear=True):
+        with pytest.raises(KeyError):
+            connect()
 
 
 @patch(
-    "src.extract.util_functions.Connection",
+    "src.extract.util_functions.connect",
     side_effect=InterfaceError("Invalid credentials"),
 )
 def test_handles_interface_errors(mock_connection, set_env_vars):
@@ -59,7 +62,7 @@ def test_handles_interface_errors(mock_connection, set_env_vars):
 
 
 @patch(
-    "src.extract.util_functions.Connection",
+    "src.extract.util_functions.pg8000.Connection",
     side_effect=DatabaseError("Database connection failed"),
 )
 def test_handles_database_errors(mock_connection, set_env_vars):
@@ -68,7 +71,7 @@ def test_handles_database_errors(mock_connection, set_env_vars):
 
 
 @patch(
-    "src.extract.util_functions.Connection", side_effect=Error("General pg8000 error")
+    "src.extract.util_functions.connect", side_effect=Error("General pg8000 error")
 )
 def test_handles_general_errors(mock_connection, set_env_vars):
     with pytest.raises(Error):
@@ -76,7 +79,7 @@ def test_handles_general_errors(mock_connection, set_env_vars):
 
 
 @patch(
-    "src.extract.util_functions.Connection", side_effect=Exception("General exception")
+    "src.extract.util_functions.connect", side_effect=Exception("General exception")
 )
 def test_handles_general_exceptions(mock_connection, set_env_vars):
     with pytest.raises(Exception):

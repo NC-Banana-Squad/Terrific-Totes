@@ -2,7 +2,7 @@ from datetime import datetime
 from pprint import pprint
 from pg8000.exceptions import InterfaceError, DatabaseError
 from botocore.exceptions import NoCredentialsError, ClientError
-from util_functions import (
+from .util_functions import (
     connect,
     create_s3_client,
     create_file_name,
@@ -11,6 +11,10 @@ from util_functions import (
 )
 import logging
 import sys
+import os 
+
+print(os.getenv('aws-access-key-id') != None)
+print(os.getenv('AWS_ACCESS_KEY_ID') != None)
 
 sys.path.insert(0, '*/Terrific-Totes/src/extract')
 
@@ -23,6 +27,23 @@ logging.basicConfig(
 
 
 def initial_extract(s3_client, conn):
+    # try:
+    #     s3_client = create_s3_client()
+    # except NoCredentialsError:
+    #     logging.error("AWS credentials not found. Unable to create S3 client")
+    #     return {
+    #         "result": "Failure",
+    #         "error": "AWS credentials not found. Unable to create S3 client",
+    #     }
+    # except ClientError as e:
+    #     logging.error(f"Error creating S3 client: {e}")
+    #     return {"result": "Failure", "error": "Error creating S3 client"}
+    
+    # try:
+    #     conn = connect()
+    # except Exception as de:
+    #     logging.error(f"Failed to connect to the database:{de}")
+
     """Get public table names from the database"""
     try:
         query = conn.run(
@@ -109,9 +130,6 @@ def lambda_handler(event, context):
         ):
             continuous_extract(s3_client, conn)
 
-        # if 'last_extracted.txt' in s3_client.list_objects(Bucket='banana-squad-code'):
-        #     continuous_extract(s3_client)
-
         else:
             initial_extract(s3_client, conn)
     except (InterfaceError, DatabaseError) as e:
@@ -133,4 +151,3 @@ def lambda_handler(event, context):
 
     return {"result": "Success"}
 
-lambda_handler(1,2)
