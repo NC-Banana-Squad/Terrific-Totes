@@ -1,10 +1,24 @@
 from datetime import datetime
 import boto3
 import csv
-import dotenv
+#import dotenv
 import os
 import io
 import pg8000
+import json
+
+def get_secret(secret_name):
+    """
+    Retrieves a secret from AWS Secrets Manager
+
+    Args:
+        secret_name (str): The name of the secret in Secrets Manager
+    Returns:
+        dict: A dictionary of the secret values.
+    """
+    client = boto3.client('secretsmanager')
+    response = client.get_secret_value(SecretId=secret_name)
+    return json.loads(response["SecretString"])
 
 
 def connect():
@@ -13,22 +27,18 @@ def connect():
     Returns:
         a database connection
     """
+    secret_name = 'database_credentials'
+    secret = get_secret(secret_name)
 
-    dotenv.load_dotenv()
+    user = secret["user"]
+    database = secret["database"]
+    password = secret["password"]
+    host = secret["host"]
+    port = secret["port"]
 
-    user = os.environ["user"]
-    database = os.environ["database"]
-    password = os.environ["password"]
-    host = os.environ["host"]
-    port = os.environ["port"]
-
-    return pg8000.Connection(
+    return pg8000.connect(
         user=user, database=database, password=password, host=host, port=port
     )
-
-    # return Connection(
-    #     user=user, database=database, password=password, host=host, port=port
-    # )
 
 
 def create_s3_client():
