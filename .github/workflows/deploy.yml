@@ -3,7 +3,7 @@ name: CI-Pipeline
 on:
   push:
     branches:
-      - terraform
+      - ciaranTerraformSecrets
 
 jobs:
   run-tests:

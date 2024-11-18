@@ -59,8 +59,14 @@ resource "aws_iam_policy" "lambda_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
+        
         Effect = "Allow",
         Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/extract:*"
+      },
+      {
+        Action = ["secretsmanager:GetSecretValue"],
+        Effect = "Allow",
+        Resource = "arn:aws:secretsmanager:::database_credentials"
       }
     ]
   })
