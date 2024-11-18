@@ -13,7 +13,7 @@ data "archive_file" "extract_lambda" {
     filename = "util_functions.py"
   }
 
-  output_path      = "${path.module}/../src/extract/extract_function.zip"
+  output_path      = "${path.module}/../extract_function.zip"
 }
 
 # resource "null_resource" "extract_lambda" {
@@ -33,7 +33,7 @@ data "archive_file" "extract_lambda" {
 resource "aws_lambda_function" "extract" {
   #Creates a Lambda function called extract with dependency layer.
   #Connect the layer which is outlined above
-  filename         = "${path.module}/../src/extract/extract_function.zip"
+  filename         = "${path.module}/../extract_function.zip"
   function_name    = var.lambda_name
   role             = aws_iam_role.lambda_role.arn
   handler          = "extract.lambda_handler"
