@@ -28,6 +28,8 @@ resource "null_resource" "extract_lambda" {
   }
 }
 
+#May want to use the source code hash correctly with an archive layer. 
+
 resource "aws_lambda_function" "extract" {
   #Creates a Lambda function called extract with dependency layer.
   #Connect the layer which is outlined above
