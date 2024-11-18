@@ -10,7 +10,7 @@ data "archive_file" "extract_lambda" {
 
   source {
     content  = file("${path.module}/../src/extract/util_functions.py")
-    filename = "util_fuctions.py"
+    filename = "util_functions.py"
   }
 
   output_path      = "${path.module}/../src/extract/extract_function.zip"
