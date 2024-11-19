@@ -103,7 +103,6 @@ def continuous_extract(s3_client, conn):
     conn.close()
     return {"result": "Success"}
 
-
 def lambda_handler(event, context):
 
     """
@@ -144,7 +143,7 @@ def lambda_handler(event, context):
     else:
         initial_extract(s3_client, conn)
 
-    try:
+    try:        
         last_extracted = datetime.now().isoformat().replace("T", " ")
         s3_client.put_object(
             Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
