@@ -3,9 +3,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 from io import StringIO
 import pytest
-
-#from src.extract.extract import continuous_extract
-from src.extract.util_functions import create_s3_client, connect
+from util_functions import create_s3_client, connect
 
 
 class xTestContinuousExtract(unittest.TestCase):

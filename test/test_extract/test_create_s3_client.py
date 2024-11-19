@@ -1,4 +1,4 @@
-from src.extract.util_functions import create_s3_client
+from util_functions import create_s3_client
 from moto import mock_aws
 from unittest.mock import patch
 from botocore.exceptions import NoCredentialsError
@@ -14,7 +14,7 @@ def test_create_s3_client_success():
     assert hasattr(s3_client, "list_buckets")
 
 
-@patch("src.extract.util_functions.boto3.client")
+@patch("util_functions.boto3.client")
 def test_create_s3_no_credentials(mock_boto_client):
 
     # Simulates an error caused by no credentials being provided

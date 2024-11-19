@@ -1,11 +1,13 @@
 from datetime import datetime
 import boto3
 import csv
-#import dotenv
+
+# import dotenv
 import os
 import io
 from pg8000.native import Connection
 import json
+
 
 def get_secret(secret_name, region_name=None):
     """
@@ -16,12 +18,11 @@ def get_secret(secret_name, region_name=None):
     Returns:
         dict: A dictionary of the secret values.
     """
-    region_name = 'eu-west-2'
+    region_name = "eu-west-2"
 
-    client = boto3.client('secretsmanager', region_name=region_name)
-    
+    client = boto3.client("secretsmanager", region_name=region_name)
 
-    try: 
+    try:
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
 
         if "SecretString" in get_secret_value_response:
@@ -39,7 +40,7 @@ def connect():
     Returns:
         a database connection
     """
-    secret_name = 'database_credentials'
+    secret_name = "database_credentials"
     secret = get_secret(secret_name)
 
     user = secret["user"]

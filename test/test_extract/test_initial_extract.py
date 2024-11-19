@@ -1,5 +1,5 @@
-from src.extract.extract import initial_extract
-from src.extract.util_functions import (
+from extract import initial_extract
+from util_functions import (
     store_in_s3,
     format_to_csv,
     create_s3_client,

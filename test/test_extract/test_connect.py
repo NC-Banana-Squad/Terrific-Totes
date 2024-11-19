@@ -1,5 +1,5 @@
 # from src.util_functions import connect
-from src.extract.util_functions import connect
+from util_functions import connect
 from unittest.mock import patch, MagicMock
 from pg8000.native import Error
 from pg8000.exceptions import InterfaceError, DatabaseError
@@ -42,7 +42,7 @@ def xtest_connection_success(mock_dotenv, mock_connection):
         database="test_db",
         password="test_pass",
         host="localhost",
-        port="5432"
+        port="5432",
     )
 
 
@@ -70,17 +70,13 @@ def xtest_handles_database_errors(mock_connection, set_env_vars):
         connect()
 
 
-@patch(
-    "src.extract.util_functions.connect", side_effect=Error("General pg8000 error")
-)
+@patch("src.extract.util_functions.connect", side_effect=Error("General pg8000 error"))
 def xtest_handles_general_errors(mock_connection, set_env_vars):
     with pytest.raises(Error):
         connect()
 
 
-@patch(
-    "src.extract.util_functions.connect", side_effect=Exception("General exception")
-)
+@patch("src.extract.util_functions.connect", side_effect=Exception("General exception"))
 def xtest_handles_general_exceptions(mock_connection, set_env_vars):
     with pytest.raises(Exception):
         connect()
