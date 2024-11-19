@@ -46,7 +46,7 @@ resource "aws_s3_object" "extract_layer_code" {
 
 #Create bucket notification when object is created in s3 
 resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = aws_s3_bucket.processed_data_bucket
+  bucket = aws_s3_bucket.processed_data_bucket.id
 
   lambda_function {
     lambda_function_arn = aws_lambda_function.transform.arn

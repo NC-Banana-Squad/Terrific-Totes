@@ -1,5 +1,5 @@
 # Create transform lambda role
-resource "aws_iam_role" "extract_lambda_role" {
+resource "aws_iam_role" "transform_lambda_role" {
   name_prefix        = "role-transform-lambda"
   assume_role_policy = data.aws_iam_policy_document.trust_policy.json
 }
@@ -48,5 +48,5 @@ resource "aws_iam_policy" "transform_lambda_policy" {
 #Attach policy to the role
 resource "aws_iam_role_policy_attachment" "transform_lambda_policy_attach" {
   role       = aws_iam_role.transform_lambda_role.name
-  policy_arn = aws_iam_policy.transform_lambda_policy
+  policy_arn = aws_iam_policy.transform_lambda_policy.arn
 }

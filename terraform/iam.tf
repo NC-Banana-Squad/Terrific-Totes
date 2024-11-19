@@ -64,8 +64,8 @@ resource "aws_iam_policy" "extract_lambda_policy" {
 
 # Attach
 resource "aws_iam_role_policy_attachment" "lambda_s3_write_policy_attachment" {
-    role = aws_iam_role.extract_lambda_role
-    policy_arn = aws_iam_policy.extract_lambda_policy
+    role = aws_iam_role.extract_lambda_role.name
+    policy_arn = aws_iam_policy.extract_lambda_policy.arn
     lifecycle {
     create_before_destroy = true
   }
@@ -84,7 +84,7 @@ resource "aws_cloudwatch_log_group" "log_group" {
 
 resource "aws_iam_role_policy" "sns_policy" {
   name = "sns-publish"
-  role = aws_iam_role.lambda_role.name
+  role = aws_iam_role.extract_lambda_role.name
 
   policy = jsonencode({
     Version = "2012-10-17"
