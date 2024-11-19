@@ -32,10 +32,10 @@ def get_secret(secret_name, region_name=None):
 
 
 def connect():
-    """Gets a Connection to the database.
-    Credentials are retrieved from environment variables.
+    """Gets a Connection to the ToteSys database.
+    Credentials are retrieved from AWS Secrets Manager by invoking get_secrets().
     Returns:
-        a database connection
+        a connection to ToteSys db
     """
     secret_name = "database_credentials"
     secret = get_secret(secret_name)
@@ -63,7 +63,7 @@ def create_file_name(table):
     """Function takes a table name provided by either initial or continuous
     extract functions, creates a file system with the parent folder named after the table
     and subsequent folders named after time periods respectively.
-    Returns a full file name with a path to it. Path will be created in S3 busket."""
+    Returns a full file name with a path to it. Path will be created in S3 busket by store_in_s3_bucket util function"""
 
     if not table or not isinstance(table, str):
         table = "UnexpectedQueryErrors"
