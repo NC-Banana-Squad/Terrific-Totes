@@ -1,9 +1,6 @@
 from datetime import datetime
 import boto3
 import csv
-
-# import dotenv
-import os
 import io
 from pg8000.native import Connection
 import json
