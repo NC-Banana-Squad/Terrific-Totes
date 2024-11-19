@@ -26,7 +26,7 @@ resource "aws_lambda_function" "extract" {
   #Connect the layer which is outlined above
   filename         = "${path.module}/../extract_function.zip"
   function_name    = var.lambda_name
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.extract_lambda_role.arn
   handler          = "extract.lambda_handler"
   source_code_hash = data.archive_file.extract_lambda.output_base64sha256
   runtime          = var.python_runtime
@@ -34,3 +34,26 @@ resource "aws_lambda_function" "extract" {
   timeout          = 20
 }
 
+data "archive_file" "transform_lambda" {
+  type             = "zip"
+  output_file_mode = "0666"
+
+  source {
+    content  = file("${path.module}/../src/transform/transform.py")
+    filename = "transform.py"
+  }
+  #may need another source for utils 
+
+  output_path = "${path.module}/../transform_function.zip"
+}
+
+resource "aws_lambda_function" "transform" {
+  filename         = "${path.module}/../transform_function.zip"
+  function_name    = "transform"
+  role             = aws_iam_role.transform_lambda_role.arn
+  handler          = "transform.lambda_handler"
+  source_code_hash = data.archive_file.transform_lambda.output_base64sha256
+  runtime          = var.python_runtime
+  layers           = [aws_lambda_layer_version.dependency_layer.arn]
+  timeout          = 20
+}

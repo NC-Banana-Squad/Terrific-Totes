@@ -1,8 +1,5 @@
-# ---------------
-# Lambda IAM Role
-# ---------------
 
-# Define
+# Define standard trust policy for Lambdas
 data "aws_iam_policy_document" "trust_policy" {
   statement {
     effect = "Allow"
@@ -16,13 +13,14 @@ data "aws_iam_policy_document" "trust_policy" {
   }
 }
 
-# Create
-resource "aws_iam_role" "lambda_role" {
+# Create extract lambda role
+resource "aws_iam_role" "extract_lambda_role" {
   name_prefix        = "role-${var.lambda_name}"
   assume_role_policy = data.aws_iam_policy_document.trust_policy.json
 }
 
-resource "aws_iam_policy" "lambda_policy" {
+#Create extract lambda policy
+resource "aws_iam_policy" "extract_lambda_policy" {
   name        = "lambda-s3-logs-policy"
   description = "IAM policy for Lambda to access S3 buckets and CloudWatch logs"
   policy = jsonencode({
@@ -66,8 +64,8 @@ resource "aws_iam_policy" "lambda_policy" {
 
 # Attach
 resource "aws_iam_role_policy_attachment" "lambda_s3_write_policy_attachment" {
-    role = aws_iam_role.lambda_role.name
-    policy_arn = aws_iam_policy.lambda_policy.arn
+    role = aws_iam_role.extract_lambda_role
+    policy_arn = aws_iam_policy.extract_lambda_policy
     lifecycle {
     create_before_destroy = true
   }
