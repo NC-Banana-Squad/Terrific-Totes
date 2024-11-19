@@ -1,58 +1,72 @@
-import unittest
-from unittest.mock import patch, MagicMock
-from datetime import datetime
-from io import StringIO
 import pytest
-from util_functions import create_s3_client, connect
+from unittest.mock import patch, MagicMock
+from src.extract.extract import continuous_extract
 
-
-class xTestContinuousExtract(unittest.TestCase):
-    def setUp(self):
-        # Mock data for testing
-        self.mock_table_data = [("table1",)]
-        self.mock_rows = [
+@pytest.fixture
+def mock_data():
+    """Provide mock data for the tests."""
+    return {
+        "mock_table_data": [("table1",)],
+        "mock_rows": [
             {"id": 1, "name": "Test", "created_at": "2024-01-01 00:00:00"},
             {"id": 2, "name": "Test2", "created_at": "2024-01-02 00:00:00"},
-        ]
-        self.mock_columns = [{"name": "id"}, {"name": "name"}, {"name": "created_at"}]
+        ],
+        "mock_columns": [{"name": "id"}, {"name": "name"}, {"name": "created_at"}]
+    }
 
-    @patch("src.extract.util_functions.create_s3_client")
-    @patch("src.extract.util_functions.connect")
-    def xtest_continuous_extract_successful_extraction(
-        self, mock_connect, mock_create_s3_client
-    ):
-        # Set up mock S3 client
-        mock_s3 = MagicMock()
-        mock_create_s3_client.return_value = mock_s3
+@pytest.fixture
+def mock_s3_client():
+    """Mock the S3 client for storing data."""
+    mock_s3 = MagicMock()
+    mock_s3.get_object.return_value = {
+        "Body": MagicMock(read=lambda: "2024-01-01 00:00:00".encode("utf-8"))
+    }
+    return mock_s3
 
-        # Mock S3 get_object response
-        mock_s3.get_object.return_value = {
-            "Body": MagicMock(read=lambda: "2024-01-01 00:00:00".encode("utf-8"))
-        }
+@pytest.fixture
+def mock_db_connection(mock_data):
+    """Mock the database connection."""
+    mock_conn = MagicMock()
+    mock_conn.run.side_effect = [
+        mock_data["mock_table_data"],  # Response for table names query
+        mock_data["mock_rows"],  # Response for data query
+    ]
+    mock_conn.columns = mock_data["mock_columns"]
+    return mock_conn
 
-        # Set up mock database connection
-        mock_conn = MagicMock()
-        mock_connect.return_value = mock_conn
+@patch("src.extract.util_functions.create_s3_client")
+@patch("src.extract.util_functions.connect")
+def test_continuous_extract_successful_extraction(mock_connect, mock_create_s3_client, mock_data, mock_s3_client, mock_db_connection):
+    """
+    Test that continuous_extract successfully extracts data from the database and stores it in S3.
+    Mocks the S3 client and database connection, simulating a successful extraction 
+    of data from the database and storing it in an S3 bucket.
+    """
+    # Set up mock S3 client and database connection
+    mock_create_s3_client.return_value = mock_s3_client
+    mock_connect.return_value = mock_db_connection
 
-        # Mock database query responses
-        mock_conn.run.side_effect = [
-            self.mock_table_data,  # Response for table names query
-            self.mock_rows,  # Response for data query
-        ]
-        mock_conn.columns = self.mock_columns
+    # Call the function to test
+    result = continuous_extract(mock_s3_client, mock_db_connection)
 
-        # Execute the function
-        result = continuous_extract()
+    # Assertions
+    assert result == {"result": "Success"}
+    
+    # Ensure S3 'get_object' method was called with the correct arguments
+    mock_s3_client.get_object.assert_called_once_with(
+        Bucket="banana-squad-code", Key="last_extracted.txt"
+    )
 
-        # Assertions
-        self.assertEqual(result, {"result": "Success"})
-        mock_s3.get_object.assert_called_once_with(
-            Bucket="banana-squad-code", Key="last_extracted.txt"
-        )
+    # Ensure that the database queries were called with correct SQL
+    mock_db_connection.run.assert_any_call(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != '_prisma_migrations'"
+    )
+    mock_db_connection.run.assert_any_call(
+        "SELECT * FROM table1 WHERE created_at > '2024-01-01 00:00:00'"
+    )
 
-        # Verify database queries were made
-        self.assertEqual(mock_conn.run.call_count, 2)
-        mock_conn.close.assert_called_once()
+    # Ensure that the S3 store function was called with the correct parameters
+    mock_s3_client.put_object.assert_called_once()
 
-        # Verify S3 store operation was called
-        mock_s3.put_object.assert_called()  # Verify file was stored in S3
+    # Ensure the database connection is closed
+    mock_db_connection.close.assert_called_once()
