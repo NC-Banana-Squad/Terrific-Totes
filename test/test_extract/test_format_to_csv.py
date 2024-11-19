@@ -1,4 +1,4 @@
-from src.extract.util_functions import format_to_csv
+from util_functions import format_to_csv
 import io
 import csv
 import pytest

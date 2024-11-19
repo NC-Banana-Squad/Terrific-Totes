@@ -23,8 +23,3 @@ variable "code_bucket_prefix" {
   type    = string
   default = "banana-squad-code"
 }
-
-# variable "key" {
-#   type = string
-#   default = "layer_code"
-# }

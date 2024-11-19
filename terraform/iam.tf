@@ -29,38 +29,34 @@ resource "aws_iam_policy" "lambda_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = ["s3:GetObject", "s3:ListBucket", "s3:ListObject", "s3:PutObject"],
+        Action = ["s3:GetObject", "s3:PutObject"],
+        Effect = "Allow",
+        Resource = "arn:aws:s3:::banana-squad-code/*"
+      },
+      {
+        Action = ["s3:ListBucket"],
         Effect = "Allow",
         Resource = "arn:aws:s3:::banana-squad-code"
       },
-      # {
-      #   Action = ["s3:ListBucket"],
-      #   Effect = "Allow",
-      #   Resource = "arn:aws:s3:::banana-squad-code/*"
-      # },
-      # {
-      #   Action = ["s3:ListObject"],
-      #   Effect = "Allow",
-      #   Resource = "arn:aws:s3:::banana-squad-code/*"
-      # },
       {
         Action = ["s3:PutObject"],
         Effect = "Allow",
-        Resource = "arn:aws:s3:::ingested_data_bucket"
+        Resource = "arn:aws:s3:::banana-squad-ingested-data/*"
       },
-      # {
-      #   Action = ["s3:PutObject"],
-      #   Effect = "Allow",
-      #   Resource = "arn:aws:s3:::banana-squad-code/*"
-      # },
       {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
+        
         Effect = "Allow",
         Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/extract:*"
+      },
+      {
+        Action = ["secretsmanager:GetSecretValue"],
+        Effect = "Allow",
+        Resource = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:database_credentials*"
       }
     ]
   })
@@ -76,63 +72,6 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_write_policy_attachment" {
     create_before_destroy = true
   }
 }
-
-# resource "aws_iam_role_policy_attachment" "s3_bucket_data_policy" {
-#     role = aws_iam_policy.s3_write_policy.name
-#     policy_arn = data.aws_iam_policy_document.s3_data_policy_doc.arn
-# }
-
-# ------------------------------
-# Lambda IAM Policy for CloudWatch
-# ------------------------------
-
-# # Define
-# data "aws_iam_policy_document" "cw_document" {
-#   statement {
-
-#     actions = [ "logs:CreateLogGroup" ]
-
-#     resources = [
-#       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
-#     ]
-#   }
-
-#   statement {
-    
-#     actions = [ "logs:CreateLogStream", "logs:PutLogEvents" ]
-
-#     resources = [
-#       "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.extract.function_name}:*"
-#     ]
-#   }
-# }
-
-# # Create
-# resource "aws_iam_policy" "cw_policy" {
-#   name   = "${var.lambda_name}-cw-logger"
-#   policy = jsonencode({
-#     "Version" : "2012-10-17",
-#     "Statement" : [
-#       {
-#         Action : [
-#           "logs:CreateLogStream",
-#           "logs:PutLogEvents"
-#         ],
-#         Effect : "Allow",
-#         Resource : "arn:aws:logs:*:*:*"
-#       }
-#     ]
-#   })
-# }
-
-# # Attach
-# resource "aws_iam_role_policy_attachment" "lambda_cw_policy_attachment" {
-#   role       = aws_iam_role.lambda_role.name
-#   policy_arn = aws_iam_policy.cw_policy.arn
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-# }
 
 resource "aws_cloudwatch_log_group" "log_group" {
   name              = "/aws/lambda/${aws_lambda_function.extract.function_name}"

@@ -7,8 +7,8 @@
 PROJECT_NAME = de-lambda-deployment
 REGION = eu-west-2
 PYTHON_INTERPRETER = python
-WD=$(shell pwd)
-PYTHONPATH=${WD}
+# WD=$(shell pwd)
+PYTHONPATH:=$(shell pwd)/src/extract
 SHELL := /bin/bash
 PROFILE = default
 PIP:=pip
