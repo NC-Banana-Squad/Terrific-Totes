@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from extract import continuous_extract
 
+
 @pytest.fixture
 def mock_data():
     """Provide mock data for the tests."""
@@ -11,8 +12,9 @@ def mock_data():
             {"id": 1, "name": "Test", "created_at": "2024-01-01 00:00:00"},
             {"id": 2, "name": "Test2", "created_at": "2024-01-02 00:00:00"},
         ],
-        "mock_columns": [{"name": "id"}, {"name": "name"}, {"name": "created_at"}]
+        "mock_columns": [{"name": "id"}, {"name": "name"}, {"name": "created_at"}],
     }
+
 
 @pytest.fixture
 def mock_s3_client():
@@ -22,6 +24,7 @@ def mock_s3_client():
         "Body": MagicMock(read=lambda: "2024-01-01 00:00:00".encode("utf-8"))
     }
     return mock_s3
+
 
 @pytest.fixture
 def mock_db_connection(mock_data):
@@ -34,12 +37,15 @@ def mock_db_connection(mock_data):
     mock_conn.columns = mock_data["mock_columns"]
     return mock_conn
 
+
 @patch("util_functions.create_s3_client")
 @patch("util_functions.connect")
-def test_continuous_extract_successful_extraction(mock_connect, mock_create_s3_client, mock_s3_client, mock_db_connection):
+def test_continuous_extract_successful_extraction(
+    mock_connect, mock_create_s3_client, mock_s3_client, mock_db_connection
+):
     """
     Test that continuous_extract successfully extracts data from the database and stores it in S3.
-    Mocks the S3 client and database connection, simulating a successful extraction 
+    Mocks the S3 client and database connection, simulating a successful extraction
     of data from the database and storing it in an S3 bucket.
     """
     # Set up mock S3 client and database connection
@@ -51,7 +57,7 @@ def test_continuous_extract_successful_extraction(mock_connect, mock_create_s3_c
 
     # Assertions
     assert result == {"result": "Success"}
-    
+
     # Ensure S3 'get_object' method was called with the correct arguments
     mock_s3_client.get_object.assert_called_once_with(
         Bucket="banana-squad-code", Key="last_extracted.txt"
