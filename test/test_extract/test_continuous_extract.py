@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from src.extract.extract import continuous_extract
+from extract import continuous_extract
 
 @pytest.fixture
 def mock_data():
@@ -34,8 +34,8 @@ def mock_db_connection(mock_data):
     mock_conn.columns = mock_data["mock_columns"]
     return mock_conn
 
-@patch("src.extract.util_functions.create_s3_client")
-@patch("src.extract.util_functions.connect")
+@patch("util_functions.create_s3_client")
+@patch("util_functions.connect")
 def test_continuous_extract_successful_extraction(mock_connect, mock_create_s3_client, mock_data, mock_s3_client, mock_db_connection):
     """
     Test that continuous_extract successfully extracts data from the database and stores it in S3.
