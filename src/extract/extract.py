@@ -38,8 +38,12 @@ def initial_extract(s3_client, conn):
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != '_prisma_migrations'"
     )
 
+    print(query)
+
     """Query each table to extract all information it contains"""
     for table in query:
+
+        print(table)
 
         file_name = create_file_name(table[0])
 
