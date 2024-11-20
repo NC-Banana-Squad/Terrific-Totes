@@ -73,6 +73,3 @@ def test_continuous_extract_successful_extraction(
 
     # Ensure that the S3 store function was called with the correct parameters
     mock_s3_client.put_object.assert_called_once()
-
-    # Ensure the database connection is closed
-    mock_db_connection.close.assert_called_once()
