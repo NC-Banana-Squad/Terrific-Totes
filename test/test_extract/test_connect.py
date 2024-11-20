@@ -1,5 +1,5 @@
 import pytest
-from src.extract.util_functions import connect
+from util_functions import connect
 from unittest.mock import patch, MagicMock
 
 
@@ -21,9 +21,9 @@ def test_connect():
     mock_connection = MagicMock()
 
     with patch(
-        "src.extract.util_functions.get_secret", return_value=mock_secret
+        "util_functions.get_secret", return_value=mock_secret
     ) as mock_get_secret, patch(
-        "src.extract.util_functions.Connection", return_value=mock_connection
+        "util_functions.Connection", return_value=mock_connection
     ) as mock_connection_cls:
         # Call the connect function
         connection = connect()
@@ -55,6 +55,6 @@ def test_connect_missing_key():
         # Missing "password", "host", "port"
     }
 
-    with patch("src.extract.util_functions.get_secret", return_value=mock_secret):
+    with patch("util_functions.get_secret", return_value=mock_secret):
         with pytest.raises(KeyError, match="password"):
             connect()
