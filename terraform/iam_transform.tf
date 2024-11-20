@@ -6,7 +6,7 @@ resource "aws_iam_role" "transform_lambda_role" {
 
 #Create transformt lambda policy
 resource "aws_iam_policy" "transform_lambda_policy" {
-  name        = "lambda-s3-logs-policy"
+  name        = "transform-lambda-policy"
   description = "IAM policy for Lambda to access S3 buckets and CloudWatch logs"
   
   policy = jsonencode({
@@ -39,7 +39,12 @@ resource "aws_iam_policy" "transform_lambda_policy" {
           "logs:PutLogEvents"
         ],
         Effect = "Allow",
-        Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/extract:*"
+        Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/transform:*"
+      },
+      {
+        Action = ["sns:Publish"],
+        Effect = "Allow",
+        Resource = "arn:aws:sns:eu-west-2:418295700587:alert-sre"
       }
     ]
   })

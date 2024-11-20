@@ -42,7 +42,10 @@ data "archive_file" "transform_lambda" {
     content  = file("${path.module}/../src/transform/transform.py")
     filename = "transform.py"
   }
-  #may need another source for utils 
+  source {
+    content  = file("${path.module}/../src/transform/transform_utils.py")
+    filename = "transform_utils.py"
+  } 
 
   output_path = "${path.module}/../transform_function.zip"
 }
