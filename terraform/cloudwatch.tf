@@ -48,6 +48,6 @@ resource "aws_cloudwatch_metric_alarm" "combined_lambda_errors" {
   threshold           = 1
   alarm_actions       = [aws_sns_topic.alert_sre.arn]
   dimensions = {
-    "FunctionName" = "extract,transform" #watch out if this syntax actually works
+    "FunctionName" : "extract,transform" #watch out if this syntax actually works
   }
 }
