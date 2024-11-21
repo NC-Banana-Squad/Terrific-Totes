@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload Lambda Layer to S3
         run: |
-          aws s3 cp extract_layer.zip s3://banana-squad-code/extract_layer.zip
+          aws s3 cp extract_layer.zip s3://banana-squad-code/extract_layer_code.zip
 
       - name: Terraform Apply
         working-directory: terraform
