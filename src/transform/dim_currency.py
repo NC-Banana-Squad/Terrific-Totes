@@ -3,14 +3,14 @@ import pandas as pd
 def currency(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
-
-    # currency table has:
+    
+    Arguments: dataframe with:
         # currency_id
         # currency_code (GBP, USD, EUR)
         # created_at
         # last_updated
-
-    # dim_currency table has:
+    
+    Returns: dataframe with:
         # currency_id
         # currency_code
         # currency_name
