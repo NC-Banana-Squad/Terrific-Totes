@@ -17,7 +17,6 @@ logging.basicConfig(
     level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-
 def initial_extract(s3_client, conn):
 
     """
@@ -52,6 +51,7 @@ def initial_extract(s3_client, conn):
 
     return {"result": "Success"}
 
+    return {"result": f"Object successfully created in {data_bucket} bucket"}
 
 def continuous_extract(s3_client, conn):
     """

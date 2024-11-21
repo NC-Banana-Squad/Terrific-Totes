@@ -44,5 +44,22 @@ resource "aws_s3_object" "extract_layer_code" {
 
 }
 
+#Create bucket notification when object is created in s3 
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket = aws_s3_bucket.ingested_data_bucket.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.transform.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+}
+#Allow triggering lambda 
+resource "aws_lambda_permission" "s3_trigger" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.transform.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.ingested_data_bucket.arn
+}
 
   

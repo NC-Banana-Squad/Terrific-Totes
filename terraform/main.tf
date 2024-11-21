@@ -12,10 +12,6 @@ terraform {
   }
 }
 
-output "module_path" {
-  value = path.module
-}
-
 provider "aws" {
     region = "eu-west-2"
     default_tags {
