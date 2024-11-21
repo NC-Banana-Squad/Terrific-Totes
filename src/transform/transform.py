@@ -40,6 +40,8 @@ def lambda_handler(event, context):
     parquet_buffer = io.BytesIO()
     result_table.to_parquet(parquet_buffer, index=False)
 
+    #dim_date()
+
     s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket='banana-squad-processed-data', Key=path)
 
     #key is the filename just updated:
