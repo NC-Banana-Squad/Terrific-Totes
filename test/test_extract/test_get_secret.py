@@ -9,6 +9,16 @@ import pytest
 
 @mock_aws
 def test_get_secret():
+    """
+    This test sets up a mock AWS Secrets Manager client, creates a secret with predefined values, and calls the get_secret function to ensure that it correctly retrieves the secret.
+
+    The secret name and values are mocked, and the test verifies that the returned secret matches the mock values.
+
+    Assumes the use of moto for mocking AWS services.
+
+    Raises:
+        AssertionError: If the retrieved secret does not match the expected mock values.
+    """
     # Define the secret name and values
     mock_secret_name = "test-database-secret"
     region_name = "eu-west-2"
@@ -33,6 +43,14 @@ def test_get_secret():
 
 @mock_aws
 def test_get_secret_missing_secret():
+    """
+    This test simulates a missing secret scenario by triggering a ResourceNotFoundException from the mocked Secrets Manager client. It ensures that the get_secret function raises a RuntimeError with a meaningful error message when the secret is not found.
+
+    Assumes the use of moto for mocking AWS services.
+
+    Raises:
+        RuntimeError: If the secret is not found, indicating a failure to retrieve the secret.
+    """
     secret_name = "nonexistent-secret"
     region_name = "us-east-1"
 
