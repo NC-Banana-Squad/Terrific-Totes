@@ -17,13 +17,13 @@ def address(df):
         "country": "country",
         "phone": "phone",
     }
-    df = df.rename(columns=rename_columns)
+    dim_location = df.rename(columns=rename_columns)
 
     # Replace missing data with null (NaN)- panadas'standard for "null"
-    df = df.fillna(value=pd.NA)
+    dim_location = dim_location.fillna(value=pd.NA)
 
     # Remove created_at and last_updated columns
-    df = df.drop(columns=['created_at', 'last_updated'])
-    
-    return df
+    dim_location = dim_location.drop(columns=['created_at', 'last_updated'])
+
+    return dim_location
 
