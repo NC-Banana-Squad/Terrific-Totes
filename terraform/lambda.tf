@@ -30,8 +30,9 @@ resource "aws_lambda_function" "extract" {
   handler          = "extract.lambda_handler"
   source_code_hash = data.archive_file.extract_lambda.output_base64sha256
   runtime          = var.python_runtime
-  layers           = [aws_lambda_layer_version.dependency_layer.arn]
+  layers           = ["${aws_lambda_layer_version.dependency_layer.arn}:${aws_lambda_layer_version.dependency_layer.version}"]
   timeout          = 20
+  depends_on       = [aws_lambda_layer_version.dependency_layer]
 }
 
 data "archive_file" "transform_lambda" {
@@ -57,6 +58,7 @@ resource "aws_lambda_function" "transform" {
   handler          = "transform.lambda_handler"
   source_code_hash = data.archive_file.transform_lambda.output_base64sha256
   runtime          = var.python_runtime
-  layers           = [aws_lambda_layer_version.dependency_layer.arn]
+  layers           = ["${aws_lambda_layer_version.dependency_layer.arn}:${aws_lambda_layer_version.dependency_layer.version}"]
   timeout          = 20
+  depends_on       = [aws_lambda_layer_version.dependency_layer]
 }
