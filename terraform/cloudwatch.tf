@@ -37,8 +37,8 @@ resource "aws_cloudwatch_log_metric_filter" "transform_error_filter" {
 }
 
 #Uses metric_filter to create cloudwatch alarm. Runs once every 2 mins for now.
-resource "aws_cloudwatch_metric_alarm" "combined_lambda_errors" {
-  alarm_name          = "CombinedLambdaErrors"
+resource "aws_cloudwatch_metric_alarm" "extract_errors" {
+  alarm_name          = "ExtractLambdaErrors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
   metric_name         = "Errors"
@@ -48,6 +48,21 @@ resource "aws_cloudwatch_metric_alarm" "combined_lambda_errors" {
   threshold           = 1
   alarm_actions       = [aws_sns_topic.alert_sre.arn]
   dimensions = {
-    "FunctionName" : "extract,transform" #watch out if this syntax actually works
+    "FunctionName" = "extract"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "transform_errors" {
+  alarm_name          = "TransformLambdaErrors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 120
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_actions       = [aws_sns_topic.alert_sre.arn]
+  dimensions = {
+    "FunctionName" = "transform"
   }
 }
