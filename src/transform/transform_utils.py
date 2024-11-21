@@ -1,4 +1,3 @@
-from transform import transform
 import pandas as pd
 
 def sales_order(df):
@@ -21,5 +20,3 @@ def sales_order(df):
     df.drop(columns=['created_at', 'last_updated'], inplace=True)
     return df
 
-def adress(df):
-    pass

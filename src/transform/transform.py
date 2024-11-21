@@ -6,7 +6,7 @@ import pandas as pd
 import boto3
 import io
 import urllib.parse
-from transform_utils import transform_sales_order_utils
+from transform_utils import sales_order
 
 
 def lambda_handler(event, context):
