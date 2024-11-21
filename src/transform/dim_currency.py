@@ -4,13 +4,13 @@ def currency(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     
-    Arguments: dataframe with:
+    Takes dataframe with:
         # currency_id
         # currency_code (GBP, USD, EUR)
         # created_at
         # last_updated
     
-    Returns: dataframe with:
+    Returns dataframe with:
         # currency_id
         # currency_code
         # currency_name
