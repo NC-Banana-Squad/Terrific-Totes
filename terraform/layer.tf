@@ -5,3 +5,7 @@ resource "aws_lambda_layer_version" "dependency_layer" {
   s3_bucket           = aws_s3_bucket.code_bucket.bucket
   s3_key              = aws_s3_object.extract_layer.key
 }
+
+output "layer_arn_with_version" {
+  value = aws_lambda_layer_version.dependency_layer.arn
+}
