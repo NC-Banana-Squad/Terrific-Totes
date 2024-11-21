@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def currency(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
