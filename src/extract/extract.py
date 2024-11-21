@@ -17,8 +17,8 @@ logging.basicConfig(
     level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-def initial_extract(s3_client, conn):
 
+def initial_extract(s3_client, conn):
     """
     Function to run an initial extract of all data currently in the ToteSys database and stores in an S3 bucket.
     - runs query to find all table names in db
@@ -52,6 +52,7 @@ def initial_extract(s3_client, conn):
     return {"result": "Success"}
 
     return {"result": f"Object successfully created in {data_bucket} bucket"}
+
 
 def continuous_extract(s3_client, conn):
     """
@@ -105,6 +106,7 @@ def continuous_extract(s3_client, conn):
             store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
 
     return {"result": "Success"}
+
 
 def lambda_handler(event, context):
     """
@@ -160,7 +162,7 @@ def lambda_handler(event, context):
     else:
         initial_extract(s3_client, conn)
 
-    try:        
+    try:
         last_extracted = datetime.now().isoformat().replace("T", " ")
         s3_client.put_object(
             Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
