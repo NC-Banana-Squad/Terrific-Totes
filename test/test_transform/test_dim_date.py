@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from dim_date import dim_date
+from transform_utils import dim_date
 
 
 def test():

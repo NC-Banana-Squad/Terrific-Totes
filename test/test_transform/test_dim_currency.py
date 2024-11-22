@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from dim_currency import currency
+from transform_utils import currency
 
 
 def test_currency_names():

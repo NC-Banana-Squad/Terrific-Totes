@@ -1,5 +1,5 @@
 import pandas as pd
-from dim_location import address
+from transform_utils import address
 import pytest
 
 def test_return_expected_data():

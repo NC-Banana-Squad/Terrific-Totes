@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from src.transform.dim_design import design
+from transform_utils import design
 
 # Test cases
 def test_design_basic_transformation():

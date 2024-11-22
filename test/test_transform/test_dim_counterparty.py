@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from dim_counterparty import counterparty
+from transform_utils import counterparty
 
 def test_counterparty_basic():
     # Input dataframes
