@@ -1,63 +1,67 @@
-from datetime import datetime
-from pg8000.exceptions import InterfaceError, DatabaseError
-from botocore.exceptions import NoCredentialsError, ClientError
-import logging
 import pandas as pd
 import boto3
 import io
 import urllib.parse
-from transform_utils import sales_order
+from transform_utils import transform_fact_sales_order, transform_dim_staff, transform_dim_counterparty, transform_dim_location
 
+def get_data_frame(s3_client, bucket, key):
+    """Fetches and returns a DataFrame from an S3 bucket."""
+    obj = s3_client.get_object(Bucket=bucket, Key=key)
+    file_stream = io.StringIO(obj['Body'].read().decode('utf-8'))
+    return pd.read_csv(file_stream)
 
 def lambda_handler(event, context):
     s3_client = boto3.client("s3", region_name='eu-west-2')
-    #Below variables use s3 trigger to read info from the event argument. This gets bucket name and key name of recent s3 update
-    bucket = event['Records'][0]['s3']['bucket']['name'] #hardcode bucket name?
+
+    # Define mappings for target tables, source data frames, and transformation functions
+    transformations = {
+        "fact_sales_order": {
+            "sources": ["sales_order"],
+            "function": transform_fact_sales_order
+        },
+        "dim_staff": {
+            "sources": ["staff", "department"],
+            "function": transform_dim_staff
+        },
+        "dim_counterparty": {
+            "sources": ["counterparty", "design"],
+            "function": transform_dim_counterparty
+        },
+        "dim_location": {
+            "sources": ["address"],
+            "function": transform_dim_location
+        }
+    }
+
+    # Extract bucket and key from the event
+    bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
-    obj = s3_client.get_object(Bucket=bucket, Key=key)
 
-    #reads the botocore file stream
-    file_stream = io.StringIO(obj['Body'].read().decode('utf-8'))
-    #reads csv and makes a df. Loads data into df
-    df = pd.read_csv(file_stream)
-    table_names = {"sales_order": "fact_sales_order", #implement conditional logic for if get()returns a list
-                   "address": "dim_location", 
-                   "staff": "dim_staff", 
-                   "currency": "dim_currency",
-                   "design": "dim_design",
-                   "counterparty": "dim_counterparty"
-                }
-    
-    function_to_invoke = key.split("/")[0] #table name really
-    table_name = table_names.get(function_to_invoke)
-    year = key.split("/")[1]
-    month = key.split("/")[2]
-    day = key.split("/")[3]
-    filename = key.split("/")[4]
-    path = f'{table_name}/{year}/{month}/{day}/{filename}'
+    # Determine which table to transform based on the folder structure
+    target_table = key.split("/")[0]
+    year, month, day, filename = key.split("/")[1:5]
 
-    result_table = f"{function_to_invoke(df)}" #do we need it to be a string?
+    if target_table not in transformations:
+        raise ValueError(f"Unknown target table: {target_table}")
+
+    # Load all required source data frames
+    sources = transformations[target_table]["sources"]
+    data_frames = []
+    for source in sources:
+        source_key = f"{source}/{year}/{month}/{day}/{filename}"
+        try:
+            df = get_data_frame(s3_client, bucket, source_key)
+            data_frames.append(df)
+        except Exception as e:
+            raise ValueError(f"Error loading source data frame {source}: {e}")
+
+    # Apply the transformation function
+    transform_function = transformations[target_table]["function"]
+    result_table = transform_function(*data_frames)
+
+    # Write the resulting data frame to the processed bucket in Parquet format
     parquet_buffer = io.BytesIO()
     result_table.to_parquet(parquet_buffer, index=False)
+    output_path = f"{target_table}/{year}/{month}/{day}/{filename}"
+    s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
 
-    #dim_date()
-
-    s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket='banana-squad-processed-data', Key=path)
-
-    #key is the filename just updated:
-
-    #'sales_order/2024/11/20/timestamp.csv'
-    
-    #Pseudocode for transform. 
-    #Call a function which takes the df above as an argument. The function called depends on the file/table name read. Get this from key.  
-
-    # if key.split('/')[0] == 'sales_order':
-    #     transformed_data = transform_sales_util(df)
-
-    #elif for each table and its regarding util function. 
-
-    #Once table conditions and transfrom complete. Convert to parquet
-
-    # transformed_data to parquet. Can use Pandas df.to_parquet()
-    # parquet_data, upload to processed_bucket with correct file name. Maybe using key again.
-    # s3_client.put_object(Body=parquet_data.csv, Bucket='banana-squad-processed-data', Key=key)

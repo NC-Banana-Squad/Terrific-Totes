@@ -32,6 +32,7 @@ resource "aws_lambda_function" "extract" {
   runtime          = var.python_runtime
   layers           = [aws_lambda_layer_version.dependency_layer.arn]
   timeout          = 20
+  depends_on       = [aws_lambda_layer_version.dependency_layer]
 }
 
 data "archive_file" "transform_lambda" {
@@ -59,4 +60,5 @@ resource "aws_lambda_function" "transform" {
   runtime          = var.python_runtime
   layers           = [aws_lambda_layer_version.dependency_layer.arn]
   timeout          = 20
+  depends_on       = [aws_lambda_layer_version.dependency_layer]
 }

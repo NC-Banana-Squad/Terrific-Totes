@@ -17,8 +17,8 @@ logging.basicConfig(
     level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-def initial_extract(s3_client, conn):
 
+def initial_extract(s3_client, conn):
     """
     Function to run an initial extract of all data currently in the ToteSys database and stores in an S3 bucket.
     - runs query to find all table names in db
@@ -53,6 +53,7 @@ def initial_extract(s3_client, conn):
 
     return {"result": f"Object successfully created in {data_bucket} bucket"}
 
+
 def continuous_extract(s3_client, conn):
     """
     Function to run an extract of recently added data in the ToteSys db and stores in an S3 bucket.
@@ -67,22 +68,6 @@ def continuous_extract(s3_client, conn):
             s3_client: a low-level interface for interacting with S3 buckets
             conn: a connection to the ToteSys database
 
-        Returns: string declaring success or failure of upload to S3
-    """
-
-    """
-    Function to run an extract of recently added data in the ToteSys db and stores in an S3 bucket.
-    - reads timestamp stored in last_extracted.txt
-    - runs db query to get all table names from db
-    - runs a db query to select all new data added since timestamp
-    - creates file name with create_file_name util function
-    - converts data into csv format
-    - stores csv file in S3 bucket
-
-        Parameters:
-            s3_client: a low-level interface for interacting with S3 buckets
-            conn: a connection to the ToteSys database
-        
         Returns: string declaring success or failure of upload to S3
     """
 
@@ -106,6 +91,7 @@ def continuous_extract(s3_client, conn):
 
     return {"result": "Success"}
 
+
 def lambda_handler(event, context):
     """
     Function contains logic to extract data from ToteSys database based on whether an initial extract has taken place or not.
@@ -119,21 +105,6 @@ def lambda_handler(event, context):
             s3_client: a low-level interface for interacting with S3 buckets
             conn: a connection to the ToteSys database
 
-        Returns: string declaring success or failure
-    """
-
-    """
-    Function contains logic to extract data from ToteSys database based on whether an initial extract has taken place or not.
-    - creates an S3 client to interact with S3 bucket.
-    - creates a connection to the ToteSys database
-    - checks whether a 'last_extracted.txt' exists in AWS and invokes either 'initial_extract' or 'continuous_extract' accordingly
-    - creates (after initial_extract) OR updates (after continuous_extract)a file called 'last_extracted.txt' and uploads to S3
-    - closes connection
-
-        Parameters:
-            s3_client: a low-level interface for interacting with S3 buckets
-            conn: a connection to the ToteSys database
-        
         Returns: string declaring success or failure
     """
 
@@ -160,7 +131,7 @@ def lambda_handler(event, context):
     else:
         initial_extract(s3_client, conn)
 
-    try:        
+    try:
         last_extracted = datetime.now().isoformat().replace("T", " ")
         s3_client.put_object(
             Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
