@@ -10,7 +10,6 @@ def get_data_frame(s3_client, bucket, key):
     file_stream = io.StringIO(obj['Body'].read().decode('utf-8'))
     return pd.read_csv(file_stream)
 
-
 def lambda_handler(event, context):
     s3_client = boto3.client("s3", region_name='eu-west-2')
 

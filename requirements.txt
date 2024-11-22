@@ -9,6 +9,6 @@ pydantic==2.8.2
 moto==5.0.11
 mypy-extensions==1.0.0
 pg8000
-pandas
+pandas==2.2.3
 python-dotenv
 pytest-cov
