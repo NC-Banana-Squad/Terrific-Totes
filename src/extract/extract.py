@@ -67,7 +67,7 @@ def continuous_extract(s3_client, conn):
         Parameters:
             s3_client: a low-level interface for interacting with S3 buckets
             conn: a connection to the ToteSys database
-        
+
         Returns: string declaring success or failure of upload to S3
     """
 
@@ -104,7 +104,7 @@ def lambda_handler(event, context):
         Parameters:
             s3_client: a low-level interface for interacting with S3 buckets
             conn: a connection to the ToteSys database
-        
+
         Returns: string declaring success or failure
     """
 
