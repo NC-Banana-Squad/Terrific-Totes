@@ -4,7 +4,6 @@ import io
 import urllib.parse
 from transform_utils import transform_fact_sales_order, transform_dim_staff, transform_dim_counterparty, transform_dim_location
 
-
 def get_data_frame(s3_client, bucket, key):
     """Fetches and returns a DataFrame from an S3 bucket."""
     obj = s3_client.get_object(Bucket=bucket, Key=key)
@@ -66,3 +65,4 @@ def lambda_handler(event, context):
     result_table.to_parquet(parquet_buffer, index=False)
     output_path = f"{target_table}/{year}/{month}/{day}/{filename}"
     s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
+

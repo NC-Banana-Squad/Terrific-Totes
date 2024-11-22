@@ -43,6 +43,12 @@ resource "aws_s3_object" "extract_layer_code" {
   source = "${path.module}/../extract_layer.zip"
 
 }
+#Upload transform function to code S3
+resource "aws_s3_object" "transform_lambda_code" {
+  bucket = aws_s3_bucket.code_bucket.bucket
+  key    = "transform_lambda_function.zip"
+  source = "${path.module}/../transform_function.zip"
+}
 
 #Create bucket notification when object is created in s3 
 resource "aws_s3_bucket_notification" "bucket_notification" {
