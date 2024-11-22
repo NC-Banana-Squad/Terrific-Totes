@@ -58,7 +58,7 @@ resource "aws_lambda_function" "transform" {
   handler          = "transform.lambda_handler"
   source_code_hash = data.archive_file.transform_lambda.output_base64sha256
   runtime          = var.python_runtime
-  layers           = [aws_lambda_layer_version.dependency_layer.arn]
+  layers           = ["arn:aws:lambda:eu-west-2:336392948345:layer:AWSSDKPandas-Python312:14"]
   timeout          = 20
   depends_on       = [aws_lambda_layer_version.dependency_layer]
 }
