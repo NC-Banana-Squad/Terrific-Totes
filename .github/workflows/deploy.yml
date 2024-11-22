@@ -51,16 +51,16 @@ jobs:
         working-directory: terraform
         run: terraform init
 
-      - name: Terraform Plan
-        working-directory: terraform
-        run: terraform plan
-
       - name: Lambda Layer Packaging
         run: |
           rm -rf extract_layer/python
           mkdir -p extract_layer/python
           pip install -r extract_layer_requirements.txt -t extract_layer/python/
           cd extract_layer && zip -r ../extract_layer.zip ./*
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan
 
       - name: Upload Lambda Layer to S3
         run: |
