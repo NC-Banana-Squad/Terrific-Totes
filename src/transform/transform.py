@@ -2,7 +2,7 @@ import pandas as pd
 import boto3
 import io
 import urllib.parse
-from transform_utils import transform_fact_sales_order, transform_dim_staff, transform_dim_counterparty, transform_dim_location
+from transform_utils import sales_order, counterparty, currency, date, design, address, staff
 
 def get_data_frame(s3_client, bucket, key):
     """Fetches and returns a DataFrame from an S3 bucket."""
@@ -17,19 +17,31 @@ def lambda_handler(event, context):
     transformations = {
         "fact_sales_order": {
             "sources": ["sales_order"],
-            "function": transform_fact_sales_order
-        },
-        "dim_staff": {
-            "sources": ["staff", "department"],
-            "function": transform_dim_staff
+            "function": sales_order
         },
         "dim_counterparty": {
-            "sources": ["counterparty", "design"],
-            "function": transform_dim_counterparty
+            "sources": ["counterparty", "address"],
+            "function": counterparty
+        },
+        "dim_currency": {
+            "sources": ["currency"],
+            "function": currency
+        },
+        "dim_date": {
+            "sources": ["date"],
+            "function": date
         },
         "dim_location": {
             "sources": ["address"],
-            "function": transform_dim_location
+            "function": address
+        },
+        "dim_design": {
+            "sources": ["design"],
+            "function": design
+        },
+        "dim_staff": {
+            "sources": ["staff", "department"],
+            "function": staff
         }
     }
 

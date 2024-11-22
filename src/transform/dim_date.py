@@ -5,7 +5,7 @@ import pandas as pd
 # https://stackoverflow.com/questions/47150709/how-to-create-a-calendar-table-date-dimension-in-pandas
 
 
-def dim_date(start="2022-01-01", end="2024-12-31"):
+def date(start="2022-01-01", end="2024-12-31"):
     """Creates calendar table for star schema.
 
     Arguments:
