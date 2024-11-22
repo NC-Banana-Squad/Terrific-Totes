@@ -21,18 +21,18 @@ def lambda_handler(event, context):
     conn = None
 
     try:
-        # Get database connectionß
+        # Get database connection
         conn = connect()
 
-         # List all files in the processed S3 bucket
+        # List all files in the processed S3 bucket
         response = s3_client.list_objects(Bucket=PROCESSED_BUCKET)
         if "Contents" not in response:
             logging.info("No files found in the processed bucket.")
             return
         
-
-
-        
+        # Load the data into the corresponding table
+        load_parquet()
+       
 
 
     except Exception as e:

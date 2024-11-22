@@ -73,6 +73,9 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
         # Uses pandas to read the parquet data into a DataFrame.
         dataframe = pd.read_parquet(parquet_data)
 
+
+        create_table(dataframe, table_name, conn)
+
         # Insert data into the table
         # Creates a cursor object to execute SQL commands on the PostgreSQL
         cursor = conn.curor()
@@ -95,6 +98,31 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
     except Exception as e:
         logging.error(f"Error loading data: {e}")
         raise
+
+def create_table(dataframe, table_name, conn):
+
+    """ Creates a table in the data warehouse if it doesn't exist """
+    # Creates a cursor object to execute SQL commands on the PostgreSQL
+    cursor = conn.cursor()
+
+    # Check if the table exists
+    cursor.execute(
+        f"""
+        SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = '{table_name}'
+        );
+        """
+    )
+    exists = cursor.fetchone()[0]
+    if exists:
+        logging.info(f"Table {table_name} already exists. Skipping creation.")
+        return
+
+    # Dynamically create the table schema based on the DataFrame
+
+
+
 
 
 
