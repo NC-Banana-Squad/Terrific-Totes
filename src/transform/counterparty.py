@@ -2,6 +2,8 @@ import pandas as pd
 import boto3
 import io
 
+#Changes
+
 def counterparty(df=None):
     s3_client = boto3.client("s3", region_name='eu-west-2')
     obj_counterparty = s3_client.get_object(Bucket='banana-squad-ingested-data', Key='counterparty/2024/11/18/2024-11-18T15:24:20.781745.csv')
