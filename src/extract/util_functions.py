@@ -32,7 +32,7 @@ def get_secret(secret_name, region_name=None):
 
 
 def connect():
-    """Gets a Connection to the ToteSys database.
+    """Gets a Connection to the data warehouse.
     Credentials are retrieved from AWS Secrets Manager by invoking get_secrets().
     Returns:
         a connection to ToteSys db
