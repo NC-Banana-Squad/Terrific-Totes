@@ -63,7 +63,8 @@ def create_file_name(table):
     """Function takes a table name provided by either initial or continuous
     extract functions, creates a file system with the parent folder named after the table
     and subsequent folders named after time periods respectively.
-    Returns a full file name with a path to it. Path will be created in S3 busket by store_in_s3_bucket util function"""
+    Returns a full file name with a path to it. Path will be created in S3 busket by store_in_s3_bucket util function
+    """
 
     if not table or not isinstance(table, str):
         table = "UnexpectedQueryErrors"
