@@ -2,10 +2,11 @@ import pandas as pd
 import boto3
 import io
 import urllib.parse
-from transform_utils import transform_fact_sales_order, transform_dim_staff, transform_dim_counterparty, transform_dim_location
+import json
+from transform_utils import fact_sales_order, dim_staff, dim_counterparty, dim_location, dim_currency, dim_date, dim_design
 
 
-def get_data_frame(s3_client, bucket, key):
+def get_data_frame(s3_client, bucket="banana-squad-ingested-data", key=None): #check what is the key it needs
     """Fetches and returns a DataFrame from an S3 bucket."""
     obj = s3_client.get_object(Bucket=bucket, Key=key)
     file_stream = io.StringIO(obj['Body'].read().decode('utf-8'))
@@ -14,55 +15,49 @@ def get_data_frame(s3_client, bucket, key):
 
 def lambda_handler(event, context):
     s3_client = boto3.client("s3", region_name='eu-west-2')
-
-    # Define mappings for target tables, source data frames, and transformation functions
-    transformations = {
-        "fact_sales_order": {
-            "sources": ["sales_order"],
-            "function": transform_fact_sales_order
-        },
-        "dim_staff": {
-            "sources": ["staff", "department"],
-            "function": transform_dim_staff
-        },
-        "dim_counterparty": {
-            "sources": ["counterparty", "design"],
-            "function": transform_dim_counterparty
-        },
-        "dim_location": {
-            "sources": ["address"],
-            "function": transform_dim_location
-        }
-    }
-
-    # Extract bucket and key from the event
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
 
-    # Determine which table to transform based on the folder structure
-    target_table = key.split("/")[0]
-    year, month, day, filename = key.split("/")[1:5]
+    obj = s3_client.get_object(Bucket=bucket, Key=key)
+    success_data = json.loads(obj['Body'].read().decode('utf-8'))
 
-    if target_table not in transformations:
-        raise ValueError(f"Unknown target table: {target_table}")
+    updated_tables = success_data.get("updated_tables", [])
+    transformations = {
+        fact_sales_order : ["sales_order"],
+        dim_counterparty : ["counterparty", "address"],
+        dim_currency: ["currency"],
+        dim_date: ["date"],
+        dim_location: ["address"],
+        dim_design: ["design"],
+        dim_staff: ["staff", "department"]
+    }
 
-    # Load all required source data frames
-    sources = transformations[target_table]["sources"]
     data_frames = []
-    for source in sources:
-        source_key = f"{source}/{year}/{month}/{day}/{filename}"
-        try:
-            df = get_data_frame(s3_client, bucket, source_key)
-            data_frames.append(df)
-        except Exception as e:
-            raise ValueError(f"Error loading source data frame {source}: {e}")
+    for table in updated_tables:
+        df = get_data_frame(s3_client, bucket, table)
+        df.name = table.split("/")[0]
+        data_frames.append(df)
+        # except Exception as e:
+        #     raise ValueError(f"Error loading source data frame {source}: {e}")
+    
+    for func, sources in transformations.items():
+        if "sales_order" in sources:
+            func()
 
-    # Apply the transformation function
-    transform_function = transformations[target_table]["function"]
-    result_table = transform_function(*data_frames)
+    for table in updated_tables:
+        table_name = table.split("/")[0]
+        for transform_function, sources in transformations.items():
+            if table_name in sources:  # Check if table_name exists in the sources
+                relevant_data_frames = [
+                df for df in data_frames if df.name.split("/")[0] in sources
+            ]
+                result_table = transform_function(relevant_data_frames)  # Call the function
+                break
 
     # Write the resulting data frame to the processed bucket in Parquet format
-    parquet_buffer = io.BytesIO()
-    result_table.to_parquet(parquet_buffer, index=False)
-    output_path = f"{target_table}/{year}/{month}/{day}/{filename}"
-    s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
+            parquet_buffer = io.BytesIO()
+            result_table.to_parquet(parquet_buffer, index=False)
+            output_path = f"{transform_function.__name__}/{table.split("/")[1:5]}"
+            s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
+
+    return "Transformation completed"
