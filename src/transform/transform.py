@@ -26,7 +26,6 @@ def lambda_handler(event, context):
         fact_sales_order : ["sales_order"],
         dim_counterparty : ["counterparty", "address"],
         dim_currency: ["currency"],
-        dim_date: ["date"],
         dim_location: ["address"],
         dim_design: ["design"],
         dim_staff: ["staff", "department"]
@@ -55,7 +54,7 @@ def lambda_handler(event, context):
     # Write the resulting data frame to the processed bucket in Parquet format
             parquet_buffer = io.BytesIO()
             result_table.to_parquet(parquet_buffer, index=False)
-            output_path = f"{transform_function.__name__}/{table.split("/")[1:5]}"
+            output_path = f"{transform_function.__name__}{'/'.join(table.split('/')[1:5])}"
             s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
 
     date_table = dim_date()
