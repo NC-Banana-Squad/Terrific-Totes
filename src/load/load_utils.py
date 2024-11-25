@@ -1,6 +1,9 @@
 import boto3
 from io import BytesIO
 from pg8000.native import Connection
+import json
+import pandas as pd
+import logging
 
 
 # Constants
@@ -57,81 +60,69 @@ def create_s3_client():
     return boto3.client("s3")
 
 def load_parquet(s3_client, bucket_name, key, table_name, conn):
-    """ Loads a Parquet file from S3 into target table in the data warehouse
-
-    s3_client: boto3 S3 client
-    bucket_name: processed bucket
-    key: key of the parquet file in the 3S bucket
-    table_name: Table name in the DW
-    conn: database connection
-    """
+    """Loads a Parquet file from S3 into target table in the data warehouse."""
     try:
-        # Read Parquet file from S3
-        # Fetches the file from S3 using the bucket name and key.
         response = s3_client.get_object(Bucket=bucket_name, Key=key)
-        # Converts the binary content into an object that can be processed
         parquet_data = BytesIO(response["Body"].read())
-        # Uses pandas to read the parquet data into a DataFrame.
         dataframe = pd.read_parquet(parquet_data)
 
+        # Check if the DataFrame is empty
+        if dataframe.empty:
+            logging.warning(f"No data found in the Parquet file: {key}")
+            return
 
+        # Create table if it doesn't exist
         create_table(dataframe, table_name, conn)
 
         # Insert data into the table
-        # Creates a cursor object to execute SQL commands on the PostgreSQL
-        cursor = conn.curor()
-        # Iterates over the rows of the DataFrame, returning the index(_)
-        # row data(row) for each iteration.
-        for _, row in dataframe.iterrows():
-            # Retrieves the column names and join the column names into a comma-separated string(for SQL)
-            columns = ",".join(dataframe.columns)
-            #Creates a list of "%s" placeholders, one for each column.
-            # and Joins the placeholders into a comma-separated string to parameterize SQL values.
-            values = ",".join(["%s"] * len(dataframe.columns))
-            sql = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
-            # Executes the SQL INSERT statement.
-            cursor.execute(sql, tuple(row))
-        #Commits the transaction, saving the changes to the database.
-        conn.commit()
+        columns = ",".join([f'"{col}"' for col in dataframe.columns])
+        placeholders = ",".join(["%s"] * len(dataframe.columns))
+        insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
 
-        logging.info(f"Data loaded successfully")
-        
+        # Use run_many for batch inserts
+        data = [tuple(row) for _, row in dataframe.iterrows()]
+        conn.run_many(insert_query, data)
+
+        logging.info(f"Data loaded successfully into {table_name}.")
     except Exception as e:
         logging.error(f"Error loading data: {e}")
         raise
 
 def create_table(dataframe, table_name, conn):
+    """Creates a table in the data warehouse if it doesn't exist."""
+    exists_query = f"""
+    SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = '{table_name}'
+    );
+    """
+    result = conn.run(exists_query)
+    exists = result[0][0]  # Extract the boolean result
 
-    """ Creates a table in the data warehouse if it doesn't exist """
-    # Creates a cursor object to execute SQL commands on the PostgreSQL
-    cursor = conn.cursor()
-
-    # Check if the table exists
-    cursor.execute(
-        f"""
-        SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_name = '{table_name}'
-        );
-        """
-    )
-    exists = cursor.fetchone()[0]
     if exists:
         logging.info(f"Table {table_name} already exists. Skipping creation.")
         return
 
     # Dynamically create the table schema based on the DataFrame
+    column_definitions = []
+    for column, dtype in dataframe.dtypes.items():
+        if pd.api.types.is_integer_dtype(dtype):
+            sql_type = "INTEGER"
+        elif pd.api.types.is_float_dtype(dtype):
+            sql_type = "FLOAT"
+        elif pd.api.types.is_bool_dtype(dtype):
+            sql_type = "BOOLEAN"
+        elif pd.api.types.is_datetime64_any_dtype(dtype):
+            sql_type = "TIMESTAMP"
+        else:
+            sql_type = "TEXT"
+        column_definitions.append(f'"{column}" {sql_type}')
 
-
-
-
-
-
-
-
-
-
-
-
-
-    
+    # Construct and execute the CREATE TABLE statement
+    create_table_query = f"""
+    CREATE TABLE {table_name} (
+        {", ".join(column_definitions)}
+    );
+    """
+    conn.run_ddl(create_table_query)
+    logging.info(f"Table {table_name} created successfully.")
