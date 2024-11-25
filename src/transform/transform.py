@@ -57,17 +57,17 @@ def lambda_handler(event, context):
         if relevant_data_frames:
             result_table = transform_function(*relevant_data_frames)
 
-            # Generate a unique file name
-            output_path = f"{transform_function.__name__}/{pd.Timestamp.now().strftime('%Y%m%d%H%M%S%f')}.parquet"
+            # Generate a unique directory name
+            year, month, day, file_name = table.split('/')[1:5]
+            output_path = f"{transform_function.__name__}/{year}/{month}/{day}/{file_name[:-4]}.parquet"
+
             if output_path not in processed_files:
                 processed_files.add(output_path)
 
                 # Write the transformed DataFrame to the processed bucket
                 parquet_buffer = io.BytesIO()
                 result_table.to_parquet(parquet_buffer, index=False)
-                file_name = f"{'/'.join(table.split('/')[1:4])}/{table.split('/')[4][:-4]}"
-                # year, month, day, filename = table.split('/')[1:5]
-                output_path = f"{transform_function.__name__}{file_name}.parquet"
+
                 s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
                 print(f"Processed and uploaded file: {output_path}")
 
