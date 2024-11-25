@@ -55,6 +55,7 @@ def lambda_handler(event, context):
                 break
 
     # Write the resulting data frame to the processed bucket in Parquet format
+        if table in processed_tables:
             parquet_buffer = io.BytesIO()
             result_table.to_parquet(parquet_buffer, index=False)
             file_name = f"{'/'.join(table.split('/')[1:4])}/{table.split('/')[4][:-4]}"
