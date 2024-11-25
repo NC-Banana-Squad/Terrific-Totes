@@ -23,7 +23,6 @@ def address(df):
     dim_location = dim_location.fillna(value=pd.NA)
 
     # Remove created_at and last_updated columns
-    dim_location = dim_location.drop(columns=['created_at', 'last_updated'])
+    dim_location = dim_location.drop(columns=["created_at", "last_updated"])
 
     return dim_location
-

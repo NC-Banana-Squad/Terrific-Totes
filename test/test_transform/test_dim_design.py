@@ -2,6 +2,7 @@ import pytest
 import pandas as pd
 from transform_utils import design
 
+
 # Test cases
 def test_design_basic_transformation():
     # Mock input DataFrame
@@ -11,7 +12,7 @@ def test_design_basic_transformation():
         "file_location": ["/path/a", "/path/b", "/path/a"],
         "file_name": ["a.pdf", "b.pdf", "a.pdf"],
         "created_at": ["2024-01-01", "2024-01-02", "2024-01-01"],
-        "last_updated": ["2024-02-01", "2024-02-02", "2024-02-01"]
+        "last_updated": ["2024-02-01", "2024-02-02", "2024-02-01"],
     }
     df = pd.DataFrame(input_data)
 
@@ -20,7 +21,7 @@ def test_design_basic_transformation():
         "design_id": [1, 2],
         "design_name": ["Design A", "Design B"],
         "file_location": ["/path/a", "/path/b"],
-        "file_name": ["a.pdf", "b.pdf"]
+        "file_name": ["a.pdf", "b.pdf"],
     }
     expected_df = pd.DataFrame(expected_data)
 
@@ -37,7 +38,7 @@ def test_design_no_duplicates():
         "design_id": [1, 2],
         "design_name": ["Design A", "Design B"],
         "file_location": ["/path/a", "/path/b"],
-        "file_name": ["a.pdf", "b.pdf"]
+        "file_name": ["a.pdf", "b.pdf"],
     }
     df = pd.DataFrame(input_data)
 
@@ -53,10 +54,14 @@ def test_design_no_duplicates():
 
 def test_design_empty_input():
     # Mock empty DataFrame
-    df = pd.DataFrame(columns=["design_id", "design_name", "file_location", "file_name"])
+    df = pd.DataFrame(
+        columns=["design_id", "design_name", "file_location", "file_name"]
+    )
 
     # Expected output is also an empty DataFrame
-    expected_df = pd.DataFrame(columns=["design_id", "design_name", "file_location", "file_name"])
+    expected_df = pd.DataFrame(
+        columns=["design_id", "design_name", "file_location", "file_name"]
+    )
 
     # Run the function
     result_df = design(df)
@@ -67,10 +72,7 @@ def test_design_empty_input():
 
 def test_design_missing_columns():
     # Mock input DataFrame with missing column
-    input_data = {
-        "design_id": [1, 2],
-        "design_name": ["Design A", "Design B"]
-    }
+    input_data = {"design_id": [1, 2], "design_name": ["Design A", "Design B"]}
     df = pd.DataFrame(input_data)
 
     # Ensure the function raises an error for missing columns
@@ -85,7 +87,7 @@ def test_design_extra_columns():
         "design_name": ["Design A", "Design B"],
         "file_location": ["/path/a", "/path/b"],
         "file_name": ["a.pdf", "b.pdf"],
-        "extra_column": [42, 43]
+        "extra_column": [42, 43],
     }
     df = pd.DataFrame(input_data)
 
@@ -94,7 +96,7 @@ def test_design_extra_columns():
         "design_id": [1, 2],
         "design_name": ["Design A", "Design B"],
         "file_location": ["/path/a", "/path/b"],
-        "file_name": ["a.pdf", "b.pdf"]
+        "file_name": ["a.pdf", "b.pdf"],
     }
     expected_df = pd.DataFrame(expected_data)
 

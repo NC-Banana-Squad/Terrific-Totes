@@ -54,7 +54,6 @@ def initial_extract(s3_client, conn):
     return extracted_tables
 
 
-
 def continuous_extract(s3_client, conn):
     """
     Function to run an extract of recently added data in the ToteSys db and stores in an S3 bucket.
@@ -137,7 +136,6 @@ def lambda_handler(event, context):
         result = initial_extract(s3_client, conn)
         extraction_type = "Initial"
 
-
     try:
         last_extracted = datetime.now().isoformat().replace("T", " ")
         s3_client.put_object(
@@ -148,10 +146,12 @@ def lambda_handler(event, context):
             "status": "Success",
             "extraction_type": extraction_type,
             "timestamp": last_extracted,
-            "updated_tables": result
+            "updated_tables": result,
         }
 
-        report_file_name = f"reports/{extraction_type}_extract_{last_extracted}_success.json"
+        report_file_name = (
+            f"reports/{extraction_type}_extract_{last_extracted}_success.json"
+        )
         s3_client.put_object(
             Body=json.dumps(report, indent=4),
             Bucket=data_bucket,
@@ -172,4 +172,3 @@ def lambda_handler(event, context):
 
     finally:
         conn.close()
-
