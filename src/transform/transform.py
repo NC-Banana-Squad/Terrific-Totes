@@ -49,7 +49,7 @@ def lambda_handler(event, context):
                 relevant_data_frames = [
                 df for df in data_frames if df.name.split("/")[0] in sources
             ]
-                result_table = transform_function(relevant_data_frames)  # Call the function
+                result_table = transform_function(*relevant_data_frames)  # Call the function
                 break
 
     # Write the resulting data frame to the processed bucket in Parquet format
@@ -58,5 +58,10 @@ def lambda_handler(event, context):
             output_path = f"{transform_function.__name__}/{table.split("/")[1:5]}"
             s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
 
+    date_table = dim_date()
+    parquet_buffer = io.BytesIO()
+    date_table.to_parquet(parquet_buffer, index=False)
+    output_path = f"dim_date/{table.split("/")[1:5]}"
+    s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
+    
     return "Transformation completed"
-
