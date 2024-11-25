@@ -54,7 +54,9 @@ def lambda_handler(event, context):
     # Write the resulting data frame to the processed bucket in Parquet format
             parquet_buffer = io.BytesIO()
             result_table.to_parquet(parquet_buffer, index=False)
-            output_path = f"{transform_function.__name__}{'/'.join(table.split('/')[1:5])}"
+            file_name = f"{'/'.join(table.split('/')[1:4])}/{table.split('/')[4][:-4]}"
+            # year, month, day, filename = table.split('/')[1:5]
+            output_path = f"{transform_function.__name__}{file_name}"
             s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
 
     date_table = dim_date()
