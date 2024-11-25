@@ -136,39 +136,40 @@ def lambda_handler(event, context):
         result = initial_extract(s3_client, conn)
         extraction_type = "Initial"
 
-    try:
-        last_extracted = datetime.now().isoformat().replace("T", " ")
-        s3_client.put_object(
-            Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
-        )
+    # try:
+    last_extracted = datetime.now().isoformat().replace("T", " ")
+    s3_client.put_object(
+        Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
+    )
 
-        report = {
-            "status": "Success",
-            "extraction_type": extraction_type,
-            "timestamp": last_extracted,
-            "updated_tables": result,
-        }
+    report = {
+        "status": "Success",
+        "extraction_type": extraction_type,
+        "timestamp": last_extracted,
+        "updated_tables": result,
+    }
 
-        report_file_name = (
-            f"reports/{extraction_type}_extract_{last_extracted}_success.json"
-        )
-        s3_client.put_object(
-            Body=json.dumps(report, indent=4),
-            Bucket=data_bucket,
-            Key=report_file_name,
-        )
+    report_file_name = (
+        f"reports/{extraction_type}_extract_{last_extracted}_success.json"
+    )
+    s3_client.put_object(
+        Body=json.dumps(report, indent=4),
+        Bucket=data_bucket,
+        Key=report_file_name,
+    )
 
-        return {
-            "result": "Success",
-            "report_file": f"s3://{code_bucket}/{report_file_name}",
-        }
-    except ClientError as e:
-        logging.error(f"Error updating last_extracted.txt: {e}")
-        return {"result": "Failure", "error": "Error updating last_extracted.txt"}
+    conn.close()
 
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        return {"result": "Failure", "error": "Unexpected error"}
+    return {
+        "result": "Success",
+        "report_file": f"s3://{code_bucket}/{report_file_name}",
+    }
+    # except ClientError as e:
+    #     logging.error(f"Error updating last_extracted.txt: {e}")
+    #     return {"result": "Failure", "error": "Error updating last_extracted.txt"}
 
-    finally:
-        conn.close()
+    # except Exception as e:
+    #     logging.error(f"Unexpected error: {e}")
+    #     return {"result": "Failure", "error": "Unexpected error"}
+
+    # finally:    
