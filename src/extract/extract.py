@@ -49,11 +49,10 @@ def initial_extract(s3_client, conn):
         if rows:
             csv_buffer = format_to_csv(rows, columns)
             store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
-        extracted_tables.append(file_name)
+            extracted_tables.append(file_name)
 
     return extracted_tables
 
-    return {"result": f"Object successfully created in {data_bucket} bucket"}
 
 def continuous_extract(s3_client, conn):
     """
@@ -100,13 +99,15 @@ def continuous_extract(s3_client, conn):
         rows = conn.run(
             f"SELECT * FROM {table[0]} WHERE created_at > '{last_extracted_datetime}'"
         )
+        print(f"Rows for table {table[0]}: {rows}")
         columns = [col["name"] for col in conn.columns]
 
         if rows:
             csv_buffer = format_to_csv(rows, columns)
             store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
-        updated_tables.append(file_name)
+            updated_tables.append(file_name)
 
+    print(f"Returning {updated_tables}")
     return updated_tables
 
 def lambda_handler(event, context):

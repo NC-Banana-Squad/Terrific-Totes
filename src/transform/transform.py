@@ -34,15 +34,13 @@ def lambda_handler(event, context):
 
     data_frames = []
     for table in updated_tables:
+        print(table)
         df = get_data_frame(s3_client, bucket, table)
         df.name = table.split("/")[0]
         data_frames.append(df)
         # except Exception as e:
         #     raise ValueError(f"Error loading source data frame {source}: {e}")
     
-    for func, sources in transformations.items():
-        if "sales_order" in sources:
-            func()
 
     for table in updated_tables:
         table_name = table.split("/")[0]
