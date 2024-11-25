@@ -56,13 +56,17 @@ def lambda_handler(event, context):
             result_table.to_parquet(parquet_buffer, index=False)
             file_name = f"{'/'.join(table.split('/')[1:4])}/{table.split('/')[4][:-4]}"
             # year, month, day, filename = table.split('/')[1:5]
-            output_path = f"{transform_function.__name__}{file_name}"
+            output_path = f"{transform_function.__name__}{file_name}.parquet"
             s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
 
-    date_table = dim_date()
-    parquet_buffer = io.BytesIO()
-    date_table.to_parquet(parquet_buffer, index=False)
-    output_path = f"dim_date/{table.split("/")[1:5]}"
-    s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
+    response = s3_client.list_objects(Bucket="banana-squad-processed-data")
+    if "Contents" in response and any(
+        obj["Key"] == "dim_date/2024/11/25/15:00:00.00000.parquet" for obj in response["Contents"]
+    ):
+        date_table = dim_date()
+        parquet_buffer = io.BytesIO()
+        date_table.to_parquet(parquet_buffer, index=False)
+        output_path = "dim_date/2024/11/25/15:00:00.00000.parquet"
+        s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
     
     return "Transformation completed"
