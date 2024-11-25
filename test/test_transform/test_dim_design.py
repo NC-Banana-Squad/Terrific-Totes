@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from transform_utils import design
+from transform_utils import dim_design
 
 
 # Test cases
@@ -26,7 +26,7 @@ def test_design_basic_transformation():
     expected_df = pd.DataFrame(expected_data)
 
     # Run the function
-    result_df = design(df)
+    result_df = dim_design(df)
 
     # Assert DataFrame equality
     pd.testing.assert_frame_equal(result_df, expected_df)
@@ -46,7 +46,7 @@ def test_design_no_duplicates():
     expected_df = pd.DataFrame(input_data)
 
     # Run the function
-    result_df = design(df)
+    result_df = dim_design(df)
 
     # Assert DataFrame equality
     pd.testing.assert_frame_equal(result_df, expected_df)
@@ -64,7 +64,7 @@ def test_design_empty_input():
     )
 
     # Run the function
-    result_df = design(df)
+    result_df = dim_design(df)
 
     # Assert DataFrame equality
     pd.testing.assert_frame_equal(result_df, expected_df)
@@ -77,7 +77,7 @@ def test_design_missing_columns():
 
     # Ensure the function raises an error for missing columns
     with pytest.raises(KeyError):
-        design(df)
+        dim_design(df)
 
 
 def test_design_extra_columns():
@@ -101,7 +101,7 @@ def test_design_extra_columns():
     expected_df = pd.DataFrame(expected_data)
 
     # Run the function
-    result_df = design(df)
+    result_df = dim_design(df)
 
     # Assert DataFrame equality
     pd.testing.assert_frame_equal(result_df, expected_df)

@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from transform_utils import counterparty
+from transform_utils import dim_counterparty
 
 
 def test_counterparty_basic():
@@ -47,7 +47,7 @@ def test_counterparty_basic():
     )
 
     # Run the function
-    result = counterparty(df1, df2)
+    result = dim_counterparty(df1, df2)
 
     # Assert the result matches the expected output
     pd.testing.assert_frame_equal(result, expected)
@@ -98,7 +98,7 @@ def test_counterparty_no_match():
     )
 
     # Run the function
-    result = counterparty(df1, df2)
+    result = dim_counterparty(df1, df2)
 
     # Assert the result matches the expected output
     pd.testing.assert_frame_equal(result, expected)

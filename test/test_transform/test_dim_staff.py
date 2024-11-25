@@ -1,5 +1,5 @@
 import pandas as pd
-from transform_utils import staff
+from transform_utils import dim_staff
 
 
 def test_staff_basic_merge():
@@ -34,7 +34,7 @@ def test_staff_basic_merge():
     )
 
     # Run Function
-    result = staff(staff_df, department_df)
+    result = dim_staff(staff_df, department_df)
 
     # Assert
     pd.testing.assert_frame_equal(result, expected_output)
@@ -75,7 +75,7 @@ def test_staff_with_missing_department():
     )
 
     # Run Function
-    result = staff(staff_df, department_df)
+    result = dim_staff(staff_df, department_df)
 
     result = result.where(pd.notnull(result), None)
     # Assert
@@ -110,7 +110,7 @@ def test_staff_removes_duplicates():
     )
 
     # Run Function
-    result = staff(staff_df, department_df)
+    result = dim_staff(staff_df, department_df)
 
     # Assert
     pd.testing.assert_frame_equal(result, expected_output)
@@ -144,7 +144,7 @@ def test_staff_empty_inputs():
     )
 
     # Run Function
-    result = staff(staff_df, department_df)
+    result = dim_staff(staff_df, department_df)
 
     # Assert
     pd.testing.assert_frame_equal(result, expected_output)

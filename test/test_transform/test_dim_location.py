@@ -1,5 +1,5 @@
 import pandas as pd
-from transform_utils import address
+from transform_utils import dim_location
 import pytest
 
 
@@ -35,7 +35,7 @@ def test_return_expected_data():
     )
 
     # Action
-    result = address(input_data)
+    result = dim_location(input_data)
 
     # Assert
     # Ensures the column names are the same
@@ -80,7 +80,7 @@ def test_return_expected_data_with_missing_values():
     )
 
     # Action
-    result = address(input_data)
+    result = dim_location(input_data)
 
     # Assert
     # Ensure result matches expected_data
