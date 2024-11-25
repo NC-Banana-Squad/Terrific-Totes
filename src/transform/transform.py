@@ -65,11 +65,10 @@ def lambda_handler(event, context):
                 # Write the transformed DataFrame to the processed bucket
                 parquet_buffer = io.BytesIO()
                 result_table.to_parquet(parquet_buffer, index=False)
-                s3_client.put_object(
-                    Body=parquet_buffer.getvalue(),
-                    Bucket="banana-squad-processed-data",
-                    Key=output_path
-                )
+                file_name = f"{'/'.join(table.split('/')[1:4])}/{table.split('/')[4][:-4]}"
+                # year, month, day, filename = table.split('/')[1:5]
+                output_path = f"{transform_function.__name__}{file_name}.parquet"
+                s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
                 print(f"Processed and uploaded file: {output_path}")
 
     # Check for dim_date table existence and process it
