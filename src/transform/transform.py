@@ -40,8 +40,10 @@ def lambda_handler(event, context):
         # except Exception as e:
         #     raise ValueError(f"Error loading source data frame {source}: {e}")
     
-
+    processed_tables = set()
     for table in updated_tables:
+        if table in processed_tables:
+            continue
         table_name = table.split("/")[0]
         for transform_function, sources in transformations.items():
             if table_name in sources:  # Check if table_name exists in the sources
@@ -49,6 +51,7 @@ def lambda_handler(event, context):
                 df for df in data_frames if df.name.split("/")[0] in sources
             ]
                 result_table = transform_function(*relevant_data_frames)  # Call the function
+                processed_tables.add(table)
                 break
 
     # Write the resulting data frame to the processed bucket in Parquet format
@@ -60,9 +63,10 @@ def lambda_handler(event, context):
             s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
 
     response = s3_client.list_objects(Bucket="banana-squad-processed-data")
-    if "Contents" in response and any(
-        obj["Key"] == "dim_date/2024/11/25/15:00:00.00000.parquet" for obj in response["Contents"]
+    if "Contents" in response and all(
+        obj["Key"] != "dim_date/2024/11/25/15:00:00.00000.parquet" for obj in response["Contents"]
     ):
+        
         date_table = dim_date()
         parquet_buffer = io.BytesIO()
         date_table.to_parquet(parquet_buffer, index=False)

@@ -28,6 +28,11 @@ resource "aws_iam_policy" "transform_lambda_policy" {
         Resource = "arn:aws:s3:::banana-squad-ingested-data"
       },
       {
+        Action = ["s3:ListBucket"],
+        Effect = "Allow",
+        Resource = "arn:aws:s3:::banana-squad-processed-data"
+      },
+      {
         Action = ["s3:PutObject"],
         Effect = "Allow",
         Resource = "arn:aws:s3:::banana-squad-processed-data/*"
