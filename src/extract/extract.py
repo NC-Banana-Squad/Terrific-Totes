@@ -9,6 +9,7 @@ from util_functions import (
     store_in_s3,
 )
 import logging
+import json
 
 data_bucket = "banana-squad-ingested-data"
 code_bucket = "banana-squad-code"
@@ -37,7 +38,7 @@ def initial_extract(s3_client, conn):
     query = conn.run(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != '_prisma_migrations'"
     )
-
+    extracted_tables = []
     """Query each table to extract all information it contains"""
     for table in query:
 
@@ -48,10 +49,10 @@ def initial_extract(s3_client, conn):
         if rows:
             csv_buffer = format_to_csv(rows, columns)
             store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
+            extracted_tables.append(file_name)
 
-    return {"result": "Success"}
+    return extracted_tables
 
-    return {"result": f"Object successfully created in {data_bucket} bucket"}
 
 
 def continuous_extract(s3_client, conn):
@@ -77,19 +78,22 @@ def continuous_extract(s3_client, conn):
     query = conn.run(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != '_prisma_migrations'"
     )
-
+    updated_tables = []
     for table in query:
         file_name = create_file_name(table[0])
         rows = conn.run(
             f"SELECT * FROM {table[0]} WHERE created_at > '{last_extracted_datetime}'"
         )
+        print(f"Rows for table {table[0]}: {rows}")
         columns = [col["name"] for col in conn.columns]
 
         if rows:
             csv_buffer = format_to_csv(rows, columns)
             store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
+            updated_tables.append(file_name)
 
-    return {"result": "Success"}
+    print(f"Returning {updated_tables}")
+    return updated_tables
 
 
 def lambda_handler(event, context):
@@ -126,16 +130,38 @@ def lambda_handler(event, context):
     if "Contents" in response and any(
         obj["Key"] == "last_extracted.txt" for obj in response["Contents"]
     ):
-        continuous_extract(s3_client, conn)
+        result = continuous_extract(s3_client, conn)
+        extraction_type = "Continuous"
 
     else:
-        initial_extract(s3_client, conn)
+        result = initial_extract(s3_client, conn)
+        extraction_type = "Initial"
+
 
     try:
         last_extracted = datetime.now().isoformat().replace("T", " ")
         s3_client.put_object(
             Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
         )
+
+        report = {
+            "status": "Success",
+            "extraction_type": extraction_type,
+            "timestamp": last_extracted,
+            "updated_tables": result
+        }
+
+        report_file_name = f"reports/{extraction_type}_extract_{last_extracted}_success.json"
+        s3_client.put_object(
+            Body=json.dumps(report, indent=4),
+            Bucket=data_bucket,
+            Key=report_file_name,
+        )
+
+        return {
+            "result": "Success",
+            "report_file": f"s3://{code_bucket}/{report_file_name}",
+        }
     except ClientError as e:
         logging.error(f"Error updating last_extracted.txt: {e}")
         return {"result": "Failure", "error": "Error updating last_extracted.txt"}
@@ -147,4 +173,3 @@ def lambda_handler(event, context):
     finally:
         conn.close()
 
-    return {"result": "Success"}

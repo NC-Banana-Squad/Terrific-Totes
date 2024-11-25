@@ -1,6 +1,6 @@
 import pandas as pd
 
-def sales_order(df):
+def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
@@ -28,7 +28,8 @@ def sales_order(df):
     df.drop(columns=["created_at", "last_updated"], inplace=True)
     return df
 
-def counterparty(df1, df2):
+def dim_counterparty(df1, df2):
+
     """
     Takes two dataframes from the transform.py file read from s3 trigger:
     1. counterparty
@@ -102,7 +103,8 @@ def counterparty(df1, df2):
 
     return dim_counterparty
 
-def currency(df):
+def dim_currency(df):
+
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
 
@@ -131,7 +133,8 @@ def currency(df):
 
     return df
 
-def date(start="2022-01-01", end="2024-12-31"):
+def dim_date(start="2022-01-01", end="2024-12-31"):
+
     """Creates calendar table for star schema.
 
     Arguments:
@@ -165,7 +168,8 @@ def date(start="2022-01-01", end="2024-12-31"):
 
     return df
 
-def design(df):
+def dim_design(df):
+
     """
     Transforms the design table into the dim_design table for the star schema.
 
@@ -186,7 +190,8 @@ def design(df):
 
     return dim_design
 
-def address(df):
+def dim_location(df):
+
     """Takes the only the address dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
@@ -212,7 +217,7 @@ def address(df):
 
     return dim_location
 
-def staff(df1, df2):
+def dim_staff(df1, df2):
 
     """
     Transforms the staff and department DataFrames to create dim_staff.
