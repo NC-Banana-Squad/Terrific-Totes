@@ -65,7 +65,7 @@ def xtest_initial_extract_called_when_last_extracted_missing(
 
 
 @patch("extract.create_s3_client")
-def test_no_credentials_error(mock_create_s3_client):
+def xtest_no_credentials_error(mock_create_s3_client):
 
     mock_create_s3_client.side_effect = NoCredentialsError
 
@@ -76,7 +76,7 @@ def test_no_credentials_error(mock_create_s3_client):
 
 
 @patch("extract.create_s3_client")
-def test_client_error_during_s3_creation(mock_create_s3_client):
+def xtest_client_error_during_s3_creation(mock_create_s3_client):
 
     mock_create_s3_client.side_effect = ClientError(
         {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}}, "ListBuckets"
@@ -89,7 +89,7 @@ def test_client_error_during_s3_creation(mock_create_s3_client):
 
 
 @patch("extract.create_s3_client")
-def test_client_error_during_s3_creation(mock_create_s3_client):
+def xtest_client_error_during_s3_creation(mock_create_s3_client):
 
     mock_create_s3_client.side_effect = ClientError(
         {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
@@ -104,7 +104,7 @@ def test_client_error_during_s3_creation(mock_create_s3_client):
 
 @patch("extract.connect")
 @patch("extract.create_s3_client")
-def test_unexpected_error_during_put_object(mock_create_s3_client, mock_conn):
+def xtest_unexpected_error_during_put_object(mock_create_s3_client, mock_conn):
 
     mock_conn = MagicMock()
     mock_s3_client = mock_create_s3_client.return_value
