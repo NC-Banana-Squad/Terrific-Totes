@@ -62,4 +62,5 @@ resource "aws_lambda_function" "transform" {
     "arn:aws:lambda:eu-west-2:336392948345:layer:AWSSDKPandas-Python312:14"  # Directly referencing the ARN of the layer
   ]
   timeout          = 20
+
 }

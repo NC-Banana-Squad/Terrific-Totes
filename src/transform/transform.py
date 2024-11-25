@@ -12,9 +12,9 @@ def get_data_frame(s3_client, bucket="banana-squad-ingested-data", key=None): #c
     file_stream = io.StringIO(obj['Body'].read().decode('utf-8'))
     return pd.read_csv(file_stream)
 
-
 def lambda_handler(event, context):
     s3_client = boto3.client("s3", region_name='eu-west-2')
+
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
 
@@ -59,3 +59,4 @@ def lambda_handler(event, context):
             s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
 
     return "Transformation completed"
+

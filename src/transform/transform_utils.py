@@ -29,6 +29,7 @@ def fact_sales_order(df):
     return df
 
 def dim_counterparty(df1, df2):
+
     """
     Takes two dataframes from the transform.py file read from s3 trigger:
     1. counterparty
@@ -103,6 +104,7 @@ def dim_counterparty(df1, df2):
     return dim_counterparty
 
 def dim_currency(df):
+
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
 
@@ -132,6 +134,7 @@ def dim_currency(df):
     return df
 
 def dim_date(start="2022-01-01", end="2024-12-31"):
+
     """Creates calendar table for star schema.
 
     Arguments:
@@ -166,6 +169,7 @@ def dim_date(start="2022-01-01", end="2024-12-31"):
     return df
 
 def dim_design(df):
+
     """
     Transforms the design table into the dim_design table for the star schema.
 
@@ -187,6 +191,7 @@ def dim_design(df):
     return dim_design
 
 def dim_location(df):
+
     """Takes the only the address dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
