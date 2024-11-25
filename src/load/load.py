@@ -2,7 +2,8 @@ from botocore.exceptions import NoCredentialsError, ClientError
 from load_utils import (
     connect,
     create_s3_client,
-
+    load_parquet,
+    create_table
 )
 import logging
 

@@ -1,5 +1,6 @@
 import boto3
 from io import BytesIO
+from pg8000.native import Connection
 
 
 # Constants
