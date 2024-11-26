@@ -78,7 +78,7 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
 
         # Use run_many for batch inserts
         data = [tuple(row) for _, row in dataframe.iterrows()]
-        conn.run_many(insert_query, data)
+        conn.run(insert_query, data)
 
         logging.info(f"Data loaded successfully into {table_name}.")
     except Exception as e:
