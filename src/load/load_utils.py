@@ -42,11 +42,11 @@ def connect():
     secret_name = "datawarehouse_credentials"
     secret = get_secret(secret_name)
 
-    user = secret["load_user"]
-    database = secret["load_database"]
-    password = secret["load_password"]
-    host = secret["load_host"]
-    port = secret["load_port"]
+    user = secret["user"]
+    database = secret["database"]
+    password = secret["password"]
+    host = secret["host"]
+    port = secret["port"]
 
     return Connection(
         user=user, database=database, password=password, host=host, port=port
