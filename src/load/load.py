@@ -30,14 +30,15 @@ def lambda_handler(event, context):
         # Extract bucket name and object key
         bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
         object_key = event["Records"][0]["s3"]["object"]["key"]
-            
+
         logging.info(f"Triggered for file: {object_key} in bucket: {bucket_name}")
             
-        # Determine table name (assuming part of key path)
-        table_name = object_key.split("/")[0]
+        # Determine schema and table name from the object key
+        table_name = object_key.split("/")[0]  # Adjust this if your key has different structure
+        full_table_name = f"project_team_5.{table_name}"
 
         # Load the data into the table
-        load_parquet(s3_client, bucket_name, object_key, table_name, conn)
+        load_parquet(s3_client, bucket_name, object_key, full_table_name, conn)
 
     except Exception as e:
         logging.error(f"Unexpected error: {e}")

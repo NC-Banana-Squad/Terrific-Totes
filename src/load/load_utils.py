@@ -59,23 +59,71 @@ def create_s3_client():
 
     return boto3.client("s3")
 
+# def load_parquet(s3_client, bucket_name, key, table_name, conn):
+#     """Loads a Parquet file from S3 into target table in the data warehouse."""
+#     try:
+#         response = s3_client.get_object(Bucket=bucket_name, Key=key)
+#         parquet_data = BytesIO(response["Body"].read())
+#         dataframe = pd.read_parquet(parquet_data)
+
+#         # Check if the DataFrame is empty
+#         if dataframe.empty:
+#             logging.warning(f"No data found in the Parquet file: {key}")
+#             return
+
+#         # Insert data into the table
+#         columns = ",".join([f'"{col}"' for col in dataframe.columns])
+#         placeholders = ",".join([f"${i+1}" for i in range(len(dataframe.columns))])
+#         insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
+
+#         # Use run_many for batch inserts
+#         data = [tuple(row) for _, row in dataframe.iterrows()]
+#         conn.run(insert_query, data)
+
+#         logging.info(f"Data loaded successfully into {table_name}.")
+#     except Exception as e:
+#         logging.error(f"Error loading data: {e}")
+#         raise
+
+
 def load_parquet(s3_client, bucket_name, key, table_name, conn):
-    """Loads a Parquet file from S3 into target table in the data warehouse."""
+    """
+    Loads a Parquet file from S3 into the target table in the data warehouse.
+
+    Parameters:
+        s3_client: An initialized boto3 S3 client.
+        bucket_name (str): Name of the S3 bucket.
+        key (str): Key of the Parquet file in the S3 bucket.
+        table_name (str): Name of the target table in the data warehouse.
+        conn: A pg8000.native.Connection object for executing SQL.
+    """
     try:
+        # Fetch the Parquet file from S3
+        logging.info(f"Fetching file from bucket={bucket_name}, key={key}")
         response = s3_client.get_object(Bucket=bucket_name, Key=key)
         parquet_data = BytesIO(response["Body"].read())
         dataframe = pd.read_parquet(parquet_data)
 
-        # Insert data into the table
-        columns = ",".join([f'"{col}"' for col in dataframe.columns])
-        placeholders = ",".join(["%s"] * len(dataframe.columns))
-        insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
+        # Check if the DataFrame is empty
+        if dataframe.empty:
+            logging.warning(f"No data found in the Parquet file: {key}")
+            return
 
-        # Use run_many for batch inserts
+        # Prepare the INSERT query with schema-qualified table names
+        columns = ",".join([f'"{col}"' for col in dataframe.columns])
+        placeholders = ",".join([f"${i+1}" for i in range(len(dataframe.columns))])
+        schema_qualified_table_name = f'"{table_name.replace(".", "\".\"")}"'
+        insert_query = f"INSERT INTO {schema_qualified_table_name} ({columns}) VALUES ({placeholders})"
+
+        # Prepare data for batch insert
         data = [tuple(row) for _, row in dataframe.iterrows()]
-        conn.run(insert_query, data)
+        logging.info(f"Preparing to insert {len(data)} rows into {schema_qualified_table_name}")
+        
+        # Execute the batch insert using pg8000.native.Connection
+        for row in data:
+            conn.run(insert_query, row)
 
         logging.info(f"Data loaded successfully into {table_name}.")
     except Exception as e:
-        logging.error(f"Error loading data: {e}")
+        logging.error(f"Error loading data into {table_name}: {e}")
         raise
