@@ -124,6 +124,6 @@ def create_table(dataframe, table_name, conn):
         {", ".join(column_definitions)}
     );
     """
-    conn.run_ddl(create_table_query)
+    conn.run(create_table_query)
 
     logging.info(f"Table {table_name} created successfully.")
