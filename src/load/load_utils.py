@@ -60,35 +60,18 @@ def create_s3_client():
 
     return boto3.client("s3")
 
-# def load_parquet(s3_client, bucket_name, key, table_name, conn):
-#     """Loads a Parquet file from S3 into target table in the data warehouse."""
-#     try:
-#         response = s3_client.get_object(Bucket=bucket_name, Key=key)
-#         parquet_data = BytesIO(response["Body"].read())
-#         dataframe = pd.read_parquet(parquet_data)
-
-#         # Check if the DataFrame is empty
-#         if dataframe.empty:
-#             logging.warning(f"No data found in the Parquet file: {key}")
-#             return
-
-#         # Insert data into the table
-#         columns = ",".join([f'"{col}"' for col in dataframe.columns])
-#         placeholders = ",".join([f"${i+1}" for i in range(len(dataframe.columns))])
-#         insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
-
-#         # Use run_many for batch inserts
-#         data = [tuple(row) for _, row in dataframe.iterrows()]
-#         conn.run(insert_query, data)
-
-#         logging.info(f"Data loaded successfully into {table_name}.")
-#     except Exception as e:
-#         logging.error(f"Error loading data: {e}")
-#         raise
-
 
 def load_parquet(s3_client, bucket_name, key, table_name, conn):
-    """Loads a Parquet file from S3 into the target table in the data warehouse."""
+    """
+    Loads a Parquet file from S3 into the target table in the data warehouse.
+
+    Parameters:
+        s3_client: An initialized boto3 S3 client.
+        bucket_name (str): Name of the S3 bucket.
+        key (str): The decoded key of the Parquet file in the S3 bucket.
+        table_name: Fully qualified table name (including schema).
+        conn: A pg8000.native.Connection object for executing SQL.
+    """
     try:
         logging.info(f"Fetching file from bucket={bucket_name}, key={key}")
 
@@ -114,7 +97,7 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
 
         # Execute the batch insert row by row
         for row in data:
-            conn.run(insert_query, *row)
+            conn.run(insert_query, row)  # Pass row as a single argument (tuple)
 
         logging.info(f"Data loaded successfully into {schema_qualified_table_name}.")
     except ClientError as e:
