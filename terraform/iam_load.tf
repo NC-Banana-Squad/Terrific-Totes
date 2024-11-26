@@ -41,13 +41,13 @@ resource "aws_iam_policy" "load_lambda_policy" {
           "logs:PutLogEvents"
         ],
         Effect = "Allow",
-        Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/transform:*"
+        Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/load:*"
       },
       {
         Action = ["sns:Publish"],
         Effect = "Allow",
         Resource = "arn:aws:sns:eu-west-2:418295700587:alert-sre"
-      }
+      },
     ]
   })
 }
