@@ -29,8 +29,8 @@ def lambda_handler(event, context):
         conn = connect()
 
         # Extract bucket name and object key
-        bucket_name = record["s3"]["bucket"]["name"]
-        object_key = record["s3"]["object"]["key"]
+        bucket_name = event["Records"]["s3"]["bucket"]["name"]
+        object_key = event["Records"]["s3"]["object"]["key"]
             
         logging.info(f"Triggered for file: {object_key} in bucket: {bucket_name}")
             
