@@ -101,11 +101,14 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
             logging.warning(f"No rows to insert for key: {key}")
             return
 
-        logging.info(f"Preparing to insert {len(data)} rows into {schema_qualified_table_name}")
-        logging.info(f"Sample row: {data[0]}")
+        # Log query and a sample row
+        logging.info(f"Generated query: {insert_query}")
+        logging.info(f"Sample row (first row): {data[0]}")
 
         # Execute the batch insert row by row
         for row in data:
+            if len(row) != len(dataframe.columns):
+                raise ValueError(f"Row length {len(row)} does not match number of columns {len(dataframe.columns)}")
             conn.run(insert_query, row)  # Pass row as a single argument (tuple)
 
         logging.info(f"Data loaded successfully into {schema_qualified_table_name}.")
