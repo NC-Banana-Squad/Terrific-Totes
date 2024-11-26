@@ -3,7 +3,7 @@ resource "aws_cloudwatch_event_rule" "scheduler" {
   # Careful! other things may need to be set up as well
   name                = "every-ten-minutes"
   description         = "runs-every-10-minutes"
-  schedule_expression = "rate(10 minutes)"
+  schedule_expression = "rate(5 minutes)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda-target-20-minutes" {

@@ -47,6 +47,15 @@ resource "aws_iam_policy" "transform_lambda_policy" {
         Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/transform:*"
       },
       {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Effect = "Allow",
+        Resource = "arn:aws:logs:eu-west-2:418295700587:log-group:/aws/lambda/load:*"
+      },
+      {
         Action = ["sns:Publish"],
         Effect = "Allow",
         Resource = "arn:aws:sns:eu-west-2:418295700587:alert-sre"
