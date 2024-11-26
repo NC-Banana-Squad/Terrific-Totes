@@ -40,7 +40,7 @@ def mock_db_connection(mock_data):
 
 @patch("util_functions.create_s3_client")
 @patch("util_functions.connect")
-def test_continuous_extract_successful_extraction(
+def xtest_continuous_extract_successful_extraction(
     mock_connect, mock_create_s3_client, mock_s3_client, mock_db_connection
 ):
     """

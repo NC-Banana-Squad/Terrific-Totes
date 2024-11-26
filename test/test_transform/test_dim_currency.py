@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from transform_utils import currency
+from transform_utils import dim_currency
 
 
 def test_currency_names():
@@ -24,7 +24,7 @@ def test_currency_names():
     df = pd.DataFrame(data)
 
     # Call currency() using dataframe
-    result = currency(df)
+    result = dim_currency(df)
 
     # Expected output
     expected_data = {
@@ -58,7 +58,7 @@ def test_invalid_currency_code():
     }
     df = pd.DataFrame(data)
 
-    result = currency(df)
+    result = dim_currency(df)
 
     expected_data = {
         "currency_id": [1, 2, 3],
@@ -89,7 +89,7 @@ def test_missing_currency_code():
     }
     df = pd.DataFrame(data)
 
-    result = currency(df)
+    result = dim_currency(df)
 
     expected_data = {
         "currency_id": [1, 2, 3],
@@ -108,7 +108,7 @@ def test_empty_dataframe():
         columns=["currency_id", "currency_code", "created_at", "last_updated"]
     )
 
-    result = currency(df)
+    result = dim_currency(df)
 
     expected_df = pd.DataFrame(
         columns=["currency_id", "currency_code", "currency_name"]
@@ -136,4 +136,4 @@ def test_missing_column():
     df = pd.DataFrame(data)
 
     with pytest.raises(KeyError):
-        currency(df)
+        dim_currency(df)

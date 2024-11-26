@@ -3,8 +3,8 @@ name: CI-Pipeline
 on:
   push:
     branches:
-      - main
-      
+      - brads
+
 jobs:
   run-tests:
     name: run-tests

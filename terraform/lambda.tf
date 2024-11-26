@@ -31,7 +31,7 @@ resource "aws_lambda_function" "extract" {
   source_code_hash = data.archive_file.extract_lambda.output_base64sha256
   runtime          = var.python_runtime
   layers           = [aws_lambda_layer_version.dependency_layer.arn]
-  timeout          = 20
+  timeout          = 120
   depends_on       = [aws_lambda_layer_version.dependency_layer]
 }
 
@@ -58,7 +58,9 @@ resource "aws_lambda_function" "transform" {
   handler          = "transform.lambda_handler"
   source_code_hash = data.archive_file.transform_lambda.output_base64sha256
   runtime          = var.python_runtime
-  layers           = ["arn:aws:lambda:eu-west-2:336392948345:layer:AWSSDKPandas-Python312:14"]
+  layers           = [
+    "arn:aws:lambda:eu-west-2:336392948345:layer:AWSSDKPandas-Python312:14"  # Directly referencing the ARN of the layer
+  ]
   timeout          = 120
-  depends_on       = [aws_lambda_layer_version.dependency_layer]
+
 }

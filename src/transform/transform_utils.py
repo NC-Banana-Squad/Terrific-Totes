@@ -1,6 +1,7 @@
 import pandas as pd
 
-def sales_order(df):
+
+def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
@@ -28,13 +29,14 @@ def sales_order(df):
     df.drop(columns=["created_at", "last_updated"], inplace=True)
     return df
 
-def counterparty(df1, df2):
+
+def dim_counterparty(df1, df2):
     """
     Takes two dataframes from the transform.py file read from s3 trigger:
     1. counterparty
     2. address
 
-    Should return transformed dataframe to be used by 
+    Should return transformed dataframe to be used by
     Lambda Handler for dim_counterparty
 
     Takes counterparty dataframe (df1) with:
@@ -56,8 +58,8 @@ def counterparty(df1, df2):
         # country eg Turkey
         # phone eg 1803 637401
         # created_at
-        # last_updated 
-        
+        # last_updated
+
     Returns dim_counterparty dataframe with:
         # counterparty_id
         # counterparty_legal_name
@@ -72,37 +74,38 @@ def counterparty(df1, df2):
 
     # Perform an inner join on legal_address_id and address_id
     merged_df = pd.merge(
-        df1,
-        df2,
-        left_on="legal_address_id",
-        right_on="address_id",
-        how="inner"
+        df1, df2, left_on="legal_address_id", right_on="address_id", how="inner"
     )
 
     # Select and rename the relevant columns
-    dim_counterparty = merged_df[[
-        "counterparty_id",
-        "counterparty_legal_name",
-        "address_line_1",
-        "address_line_2",
-        "district",
-        "city",
-        "postal_code",
-        "country",
-        "phone"
-    ]].rename(columns={
-        "address_line_1": "counterparty_legal_address_line_1",
-        "address_line_2": "counterparty_legal_address_line_2",
-        "district": "counterparty_legal_district",
-        "city": "counterparty_legal_city",
-        "postal_code": "counterparty_legal_postal_code",
-        "country": "counterparty_legal_country",
-        "phone": "counterparty_legal_phone_number"
-    })
+    dim_counterparty = merged_df[
+        [
+            "counterparty_id",
+            "counterparty_legal_name",
+            "address_line_1",
+            "address_line_2",
+            "district",
+            "city",
+            "postal_code",
+            "country",
+            "phone",
+        ]
+    ].rename(
+        columns={
+            "address_line_1": "counterparty_legal_address_line_1",
+            "address_line_2": "counterparty_legal_address_line_2",
+            "district": "counterparty_legal_district",
+            "city": "counterparty_legal_city",
+            "postal_code": "counterparty_legal_postal_code",
+            "country": "counterparty_legal_country",
+            "phone": "counterparty_legal_phone_number",
+        }
+    )
 
     return dim_counterparty
 
-def currency(df):
+
+def dim_currency(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
 
@@ -131,7 +134,8 @@ def currency(df):
 
     return df
 
-def date(start="2022-01-01", end="2024-12-31"):
+
+def dim_date(start="2022-01-01", end="2024-12-31"):
     """Creates calendar table for star schema.
 
     Arguments:
@@ -165,7 +169,8 @@ def date(start="2022-01-01", end="2024-12-31"):
 
     return df
 
-def design(df):
+
+def dim_design(df):
     """
     Transforms the design table into the dim_design table for the star schema.
 
@@ -181,12 +186,13 @@ def design(df):
     # Drop duplicates
     dim_design = dim_design.drop_duplicates(subset=["design_id"])
 
-    # Sorting is optional but recommended for consistent 
+    # Sorting is optional but recommended for consistent
     dim_design = dim_design.sort_values(by="design_id").reset_index(drop=True)
 
     return dim_design
 
-def address(df):
+
+def dim_location(df):
     """Takes the only the address dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
@@ -208,19 +214,19 @@ def address(df):
     dim_location = dim_location.fillna(value=pd.NA)
 
     # Remove created_at and last_updated columns
-    dim_location = dim_location.drop(columns=['created_at', 'last_updated'])
+    dim_location = dim_location.drop(columns=["created_at", "last_updated"])
 
     return dim_location
 
-def staff(df1, df2):
 
+def dim_staff(df1, df2):
     """
     Transforms the staff and department DataFrames to create dim_staff.
-    
+
     Args:
         staff_df (pd.DataFrame): DataFrame containing staff table data.
         department_df (pd.DataFrame): DataFrame containing department table data.
-    
+
     Returns:
         pd.DataFrame: Transformed DataFrame for the dim_staff table.
     """
@@ -231,18 +237,20 @@ def staff(df1, df2):
     dim_staff = staff_df.merge(
         department_df[["department_id", "department_name", "location"]],
         how="left",
-        on="department_id"
+        on="department_id",
     )
-    
+
     # Select relevant columns
-    dim_staff = dim_staff[[
-        "staff_id",
-        "first_name",
-        "last_name",
-        "department_name",
-        "location",
-        "email_address"
-    ]]
+    dim_staff = dim_staff[
+        [
+            "staff_id",
+            "first_name",
+            "last_name",
+            "department_name",
+            "location",
+            "email_address",
+        ]
+    ]
 
     # Remove duplicates if any
     dim_staff = dim_staff.drop_duplicates()
