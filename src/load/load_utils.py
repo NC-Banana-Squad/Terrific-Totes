@@ -85,6 +85,10 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
             logging.warning(f"No data found in the Parquet file: {key}")
             return
 
+        # Log DataFrame structure
+        logging.info(f"DataFrame columns: {list(dataframe.columns)}")
+        logging.info(f"DataFrame sample:\n{dataframe.head()}")
+
         # Prepare the INSERT query with schema-qualified table names
         columns = ",".join([f'"{col}"' for col in dataframe.columns])
         placeholders = ",".join([f"${i+1}" for i in range(len(dataframe.columns))])
@@ -93,7 +97,12 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
 
         # Prepare data for batch insert
         data = [tuple(row) for _, row in dataframe.iterrows()]
+        if not data:
+            logging.warning(f"No rows to insert for key: {key}")
+            return
+
         logging.info(f"Preparing to insert {len(data)} rows into {schema_qualified_table_name}")
+        logging.info(f"Sample row: {data[0]}")
 
         # Execute the batch insert row by row
         for row in data:
