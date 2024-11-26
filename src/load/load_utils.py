@@ -71,9 +71,6 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
             logging.warning(f"No data found in the Parquet file: {key}")
             return
 
-        # Create table if it doesn't exist
-        create_table(dataframe, table_name, conn)
-
         # Insert data into the table
         columns = ",".join([f'"{col}"' for col in dataframe.columns])
         placeholders = ",".join(["%s"] * len(dataframe.columns))
@@ -87,43 +84,3 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
     except Exception as e:
         logging.error(f"Error loading data: {e}")
         raise
-
-def create_table(dataframe, table_name, conn):
-    """Creates a table in the data warehouse if it doesn't exist."""
-    exists_query = f"""
-    SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_name = '{table_name}'
-    );
-    """
-    result = conn.run(exists_query)
-    exists = result[0][0]  # Extract the boolean result
-
-    if exists:
-        logging.info(f"Table {table_name} already exists. Skipping creation.")
-        return
-
-    # Dynamically create the table schema based on the DataFrame
-    column_definitions = []
-    for column, dtype in dataframe.dtypes.items():
-        if pd.api.types.is_integer_dtype(dtype):
-            sql_type = "INTEGER"
-        elif pd.api.types.is_float_dtype(dtype):
-            sql_type = "FLOAT"
-        elif pd.api.types.is_bool_dtype(dtype):
-            sql_type = "BOOLEAN"
-        elif pd.api.types.is_datetime64_any_dtype(dtype):
-            sql_type = "TIMESTAMP"
-        else:
-            sql_type = "TEXT"
-        column_definitions.append(f'"{column}" {sql_type}')
-
-    # Construct and execute the CREATE TABLE statement
-    create_table_query = f"""
-    CREATE TABLE {table_name} (
-        {", ".join(column_definitions)}
-    );
-    """
-    conn.run(create_table_query)
-
-    logging.info(f"Table {table_name} created successfully.")

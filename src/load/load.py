@@ -3,7 +3,6 @@ from load_utils import (
     connect,
     create_s3_client,
     load_parquet,
-    create_table,
     get_secret
 )
 import logging
