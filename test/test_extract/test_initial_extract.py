@@ -1,7 +1,6 @@
-from extract import initial_extract
 import pytest
-from unittest.mock import patch, MagicMock, call
-from io import StringIO
+from unittest.mock import MagicMock, patch
+from extract import initial_extract
 
 
 @pytest.fixture
@@ -18,16 +17,6 @@ def mock_data():
 
 
 @pytest.fixture
-def mock_s3_client():
-    """Mock the S3 client for storing data."""
-    mock_s3 = MagicMock()
-    mock_s3.get_object.return_value = {
-        "Body": MagicMock(read=lambda: "2024-01-01 00:00:00".encode("utf-8"))
-    }
-    return mock_s3
-
-
-@pytest.fixture
 def mock_db_connection(mock_data):
     """Mock the database connection."""
     mock_conn = MagicMock()
@@ -39,82 +28,80 @@ def mock_db_connection(mock_data):
     return mock_conn
 
 
-@patch("util_functions.create_s3_client")
-@patch("util_functions.connect")
-def xtest_initial_extract_successful_extraction(
-    mock_connect, mock_create_s3_client, mock_data, mock_s3_client, mock_db_connection
+@pytest.fixture
+def mock_s3_client():
+    """Mock the S3 client."""
+    return MagicMock()
+
+
+@patch("extract.create_file_name", return_value="mocked_file_name.csv")
+@patch("extract.format_to_csv", return_value="mocked_csv_data")
+@patch("extract.store_in_s3")
+def test_initial_extract_successful_extraction(
+    mock_store_in_s3, mock_format_to_csv, mock_create_file_name, mock_s3_client, mock_db_connection, mock_data
 ):
-    # Set up mock S3 client and database connection
-    mock_create_s3_client.return_value = mock_s3_client
-    mock_connect.return_value = mock_db_connection
+    # Mock the store_in_s3 function
+    mock_store_in_s3.return_value = True
 
     # Call the function to test
     result = initial_extract(mock_s3_client, mock_db_connection)
 
     # Assertions
-    assert result == {"result": "Success"}
+    assert result == ["mocked_file_name.csv"]
+    mock_create_file_name.assert_called_once_with("table1")
+    mock_format_to_csv.assert_called_once_with(mock_data["mock_rows"], ["id", "name", "created_at"])
+    mock_store_in_s3.assert_called_once_with(
+        mock_s3_client, "mocked_csv_data", "banana-squad-ingested-data", "mocked_file_name.csv"
+    )
 
-    # Ensure that the S3 store function was called with the correct parameters
-    mock_s3_client.put_object.assert_called_once()
 
-
-@patch("util_functions.create_s3_client")
-@patch("util_functions.connect")
+@patch("extract.create_file_name", return_value="mocked_file_name.csv")
+@patch("extract.store_in_s3", side_effect=Exception("S3 upload failed"))
 def test_initial_extract_s3_upload_failure(
-    mock_connect, mock_create_s3_client, mock_data, mock_s3_client, mock_db_connection
+    mock_store_in_s3, mock_create_file_name, mock_s3_client, mock_db_connection
 ):
-    # Simulate an exception during S3 upload
-    mock_s3_client.put_object.side_effect = Exception("S3 upload failed")
-    mock_create_s3_client.return_value = mock_s3_client
-    mock_connect.return_value = mock_db_connection
-
-    # Test that the exception is raised
     with pytest.raises(Exception, match="S3 upload failed"):
         initial_extract(mock_s3_client, mock_db_connection)
-
-    # Ensure that the S3 store function was called
-    mock_s3_client.put_object.assert_called_once()
+    mock_store_in_s3.assert_called_once()
 
 
-@patch("util_functions.create_s3_client")
-@patch("util_functions.connect")
-def xtest_initial_extract_table_with_no_rows(
-    mock_connect, mock_create_s3_client, mock_s3_client, mock_db_connection, mock_data
+@patch("extract.create_file_name", return_value="mocked_file_name.csv")
+@patch("extract.format_to_csv", return_value="mocked_csv_data")
+@patch("extract.store_in_s3")
+def test_initial_extract_no_rows_in_table(
+    mock_store_in_s3, mock_format_to_csv, mock_create_file_name, mock_s3_client, mock_db_connection, mock_data
 ):
-    mock_create_s3_client.return_value = mock_s3_client
-    mock_connect.return_value = mock_db_connection
-
-    # Mock one table and an empty rows response
-    mock_db_connection.run.side_effect = [mock_data["mock_table_data"], []]
-    mock_db_connection.columns = mock_data["mock_columns"]
-
-    result = initial_extract(mock_s3_client, mock_db_connection)
-
-    assert result == {"result": "Success"}
-    mock_s3_client.put_object.assert_not_called()
-
-
-def xtest_initial_extract_no_rows(mock_data, mock_s3_client, mock_db_connection):
     # Modify mock to return empty rows
     mock_db_connection.run.side_effect = [
         mock_data["mock_table_data"],  # Table names
-        [],  # Empty rows for a table
+        [],  # No rows for the table
     ]
 
-    # Call function, ensure no errors
     result = initial_extract(mock_s3_client, mock_db_connection)
-    assert result == {"result": "Success"}
+
+    assert result == []
+    mock_create_file_name.assert_called_once_with("table1")
+    mock_format_to_csv.assert_not_called()
+    mock_store_in_s3.assert_not_called()
 
 
-def xtest_initial_extract_multiple_tables(mock_data, mock_s3_client, mock_db_connection):
+@patch("extract.create_file_name", return_value="mocked_file_name.csv")
+@patch("extract.format_to_csv", return_value="mocked_csv_data")
+@patch("extract.store_in_s3")
+def test_initial_extract_multiple_tables(
+    mock_store_in_s3, mock_format_to_csv, mock_create_file_name, mock_s3_client, mock_db_connection, mock_data
+):
     # Modify mock to return multiple tables
     mock_data["mock_table_data"] = [("table1",), ("table2",)]
     mock_db_connection.run.side_effect = [
         mock_data["mock_table_data"],  # Table names
-        mock_data["mock_rows"],  # Rows for first table
-        mock_data["mock_rows"],  # Rows for second table
+        mock_data["mock_rows"],  # Rows for table1
+        mock_data["mock_rows"],  # Rows for table2
     ]
 
-    # Call function
     result = initial_extract(mock_s3_client, mock_db_connection)
-    assert result == {"result": "Success"}
+
+    assert result == ["mocked_file_name.csv", "mocked_file_name.csv"]
+    assert mock_create_file_name.call_count == 2
+    assert mock_format_to_csv.call_count == 2
+    assert mock_store_in_s3.call_count == 2
