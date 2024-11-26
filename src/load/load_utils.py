@@ -118,12 +118,19 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
         # Prepare data for batch insert
         data = [tuple(row) for _, row in dataframe.iterrows()]
         logging.info(f"Preparing to insert {len(data)} rows into {schema_qualified_table_name}")
-        
+
         # Execute the batch insert using pg8000.native.Connection
         for row in data:
             conn.run(insert_query, row)
 
         logging.info(f"Data loaded successfully into {table_name}.")
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            logging.error(f"Key {key} not found in bucket {bucket_name}.")
+            raise FileNotFoundError(f"The key '{key}' does not exist in bucket '{bucket_name}'.")
+        else:
+            raise
+        
     except Exception as e:
         logging.error(f"Error loading data into {table_name}: {e}")
         raise
