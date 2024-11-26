@@ -4,7 +4,7 @@ from pg8000.native import Connection
 import json
 import pandas as pd
 import logging
-
+import os
 
 # Constants
 PROCESSED_BUCKET = "banana-squad-processed-data"
@@ -31,7 +31,7 @@ def get_secret(secret_name, region_name=None):
         else:
             raise ValueError("Secret is stored as binary; function expects JSON.")
     except Exception as e:
-        raise RuntimeError("Failed to retrieve secret: {e}")
+        raise RuntimeError(f"Failed to retrieve secret: {e}")
 
 def connect():
     """Gets a Connection to the ToteSys database.
@@ -42,14 +42,14 @@ def connect():
     secret_name = "database_credentials"
     secret = get_secret(secret_name)
 
-    user = secret["user"]
-    database = secret["database"]
-    password = secret["password"]
-    host = secret["host"]
-    port = secret["port"]
+    user = secret["load_user"]
+    database = secret["load_database"]
+    password = secret["load_password"]
+    host = secret["load_host"]
+    port = secret["load_port"]
 
     return Connection(
-        user=user, database=database, password=password, host=host, port=port
+        user=user, database=database, password=password, host=host, port=load_port
     )
 
 def create_s3_client():
