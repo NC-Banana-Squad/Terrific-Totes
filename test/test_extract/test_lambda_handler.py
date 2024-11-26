@@ -49,7 +49,9 @@ def test_initial_extract_called_when_last_extracted_missing(
     # Mock the S3 client
     mock_s3 = MagicMock()
     # Simulate the absence of 'last_extracted.txt'
-    mock_s3.list_objects.return_value = {}  # No 'Contents' key means no files in the bucket
+    mock_s3.list_objects.return_value = (
+        {}
+    )  # No 'Contents' key means no files in the bucket
     mock_s3_client.return_value = mock_s3
 
     # Mock the database connection
@@ -58,7 +60,7 @@ def test_initial_extract_called_when_last_extracted_missing(
 
     # Mock initial_extract to return a serializable result
     mock_initial.return_value = {"updated_tables": ["table1", "table2"]}
-    
+
     # Call the lambda handler
     result = lambda_handler({}, {})
 
