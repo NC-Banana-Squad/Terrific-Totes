@@ -70,4 +70,21 @@ resource "aws_lambda_permission" "s3_trigger" {
   source_arn    = aws_s3_bucket.ingested_data_bucket.arn
 }
 
-  
+resource "aws_s3_bucket_notification" "processed_bucket_notification" {
+  bucket = aws_s3_bucket.processed_data_bucket.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.load.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+  depends_on = [aws_lambda_permission.s3_load_trigger ]
+}
+#Allow triggering load lambda 
+resource "aws_lambda_permission" "s3_load_trigger" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.load.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.processed_data_bucket.arn
+}
+
