@@ -38,7 +38,12 @@ def mock_s3_client():
 @patch("extract.format_to_csv", return_value="mocked_csv_data")
 @patch("extract.store_in_s3")
 def test_initial_extract_successful_extraction(
-    mock_store_in_s3, mock_format_to_csv, mock_create_file_name, mock_s3_client, mock_db_connection, mock_data
+    mock_store_in_s3,
+    mock_format_to_csv,
+    mock_create_file_name,
+    mock_s3_client,
+    mock_db_connection,
+    mock_data,
 ):
     # Mock the store_in_s3 function
     mock_store_in_s3.return_value = True
@@ -49,9 +54,14 @@ def test_initial_extract_successful_extraction(
     # Assertions
     assert result == ["mocked_file_name.csv"]
     mock_create_file_name.assert_called_once_with("table1")
-    mock_format_to_csv.assert_called_once_with(mock_data["mock_rows"], ["id", "name", "created_at"])
+    mock_format_to_csv.assert_called_once_with(
+        mock_data["mock_rows"], ["id", "name", "created_at"]
+    )
     mock_store_in_s3.assert_called_once_with(
-        mock_s3_client, "mocked_csv_data", "banana-squad-ingested-data", "mocked_file_name.csv"
+        mock_s3_client,
+        "mocked_csv_data",
+        "banana-squad-ingested-data",
+        "mocked_file_name.csv",
     )
 
 
@@ -69,7 +79,12 @@ def test_initial_extract_s3_upload_failure(
 @patch("extract.format_to_csv", return_value="mocked_csv_data")
 @patch("extract.store_in_s3")
 def test_initial_extract_no_rows_in_table(
-    mock_store_in_s3, mock_format_to_csv, mock_create_file_name, mock_s3_client, mock_db_connection, mock_data
+    mock_store_in_s3,
+    mock_format_to_csv,
+    mock_create_file_name,
+    mock_s3_client,
+    mock_db_connection,
+    mock_data,
 ):
     # Modify mock to return empty rows
     mock_db_connection.run.side_effect = [
@@ -89,7 +104,12 @@ def test_initial_extract_no_rows_in_table(
 @patch("extract.format_to_csv", return_value="mocked_csv_data")
 @patch("extract.store_in_s3")
 def test_initial_extract_multiple_tables(
-    mock_store_in_s3, mock_format_to_csv, mock_create_file_name, mock_s3_client, mock_db_connection, mock_data
+    mock_store_in_s3,
+    mock_format_to_csv,
+    mock_create_file_name,
+    mock_s3_client,
+    mock_db_connection,
+    mock_data,
 ):
     # Modify mock to return multiple tables
     mock_data["mock_table_data"] = [("table1",), ("table2",)]

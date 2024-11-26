@@ -4,9 +4,6 @@ from botocore.exceptions import NoCredentialsError, ClientError
 from pg8000.exceptions import InterfaceError, DatabaseError
 from unittest.mock import patch, MagicMock
 from datetime import datetime
-import unittest
-import pytest
-import boto3
 
 
 @mock_aws
@@ -14,58 +11,67 @@ import boto3
 @patch("extract.connect")
 @patch("extract.initial_extract")
 @patch("extract.continuous_extract")
-def xtest_continuous_extract_called_when_last_extracted_exists(
+def test_continuous_extract_called_when_last_extracted_exists(
     mock_continuous, mock_initial, mock_connect, mock_s3_client
 ):
-    secret_name = "database_credentials"
-    region_name = "eu-west-2"
-    client = boto3.client("secretsmanager", region_name=region_name)
-    client.create_secret(
-        Name=secret_name,
-        SecretString='{"user":"test_user","database":"test_db","password":"test_pass","host":"localhost","port":"5432"}',
-    )
-
+    # Mock the S3 client
     mock_s3 = MagicMock()
+    # Simulate the presence of 'last_extracted.txt'
     mock_s3.list_objects.return_value = {"Contents": [{"Key": "last_extracted.txt"}]}
     mock_s3_client.return_value = mock_s3
 
+    # Mock the database connection
     mock_conn = MagicMock()
     mock_connect.return_value = mock_conn
 
+    # Mock continuous_extract to return a serializable result
+    mock_continuous.return_value = {"updated_tables": ["table1", "table2"]}
+
+    # Call the lambda handler
     result = lambda_handler({}, {})
 
+    # Assert that continuous_extract was called, and initial_extract was not
     mock_continuous.assert_called_once_with(mock_s3, mock_conn)
     mock_initial.assert_not_called()
 
+    # Verify the result is a success
     assert result["result"] == "Success"
 
 
 @mock_aws
-@patch("extract.connect")
 @patch("extract.create_s3_client")
+@patch("extract.connect")
 @patch("extract.initial_extract")
 @patch("extract.continuous_extract")
-def xtest_initial_extract_called_when_last_extracted_missing(
-    mock_continuous, mock_initial, mock_s3_client, mock_connect
+def test_initial_extract_called_when_last_extracted_missing(
+    mock_continuous, mock_initial, mock_connect, mock_s3_client
 ):
-    # Mock S3 client
+    # Mock the S3 client
     mock_s3 = MagicMock()
-    mock_s3.list_objects.return_value = {}  # Simulate missing file
+    # Simulate the absence of 'last_extracted.txt'
+    mock_s3.list_objects.return_value = {}  # No 'Contents' key means no files in the bucket
     mock_s3_client.return_value = mock_s3
 
+    # Mock the database connection
     mock_conn = MagicMock()
     mock_connect.return_value = mock_conn
 
+    # Mock initial_extract to return a serializable result
+    mock_initial.return_value = {"updated_tables": ["table1", "table2"]}
+    
+    # Call the lambda handler
     result = lambda_handler({}, {})
 
+    # Assert that initial_extract was called, and continuous_extract was not
     mock_initial.assert_called_once_with(mock_s3, mock_conn)
     mock_continuous.assert_not_called()
 
+    # Verify the result is a success
     assert result["result"] == "Success"
 
 
 @patch("extract.create_s3_client")
-def xtest_no_credentials_error(mock_create_s3_client):
+def test_no_credentials_error(mock_create_s3_client):
 
     mock_create_s3_client.side_effect = NoCredentialsError
 
@@ -76,7 +82,7 @@ def xtest_no_credentials_error(mock_create_s3_client):
 
 
 @patch("extract.create_s3_client")
-def xtest_client_error_during_s3_creation(mock_create_s3_client):
+def test_client_error_during_s3_creation(mock_create_s3_client):
 
     mock_create_s3_client.side_effect = ClientError(
         {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}}, "ListBuckets"
@@ -89,7 +95,7 @@ def xtest_client_error_during_s3_creation(mock_create_s3_client):
 
 
 @patch("extract.create_s3_client")
-def xtest_client_error_during_s3_creation(mock_create_s3_client):
+def test_client_error_during_s3_creation(mock_create_s3_client):
 
     mock_create_s3_client.side_effect = ClientError(
         {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
@@ -104,7 +110,7 @@ def xtest_client_error_during_s3_creation(mock_create_s3_client):
 
 @patch("extract.connect")
 @patch("extract.create_s3_client")
-def xtest_unexpected_error_during_put_object(mock_create_s3_client, mock_conn):
+def test_unexpected_error_during_put_object(mock_create_s3_client, mock_conn):
 
     mock_conn = MagicMock()
     mock_s3_client = mock_create_s3_client.return_value
