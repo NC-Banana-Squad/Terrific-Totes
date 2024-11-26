@@ -66,11 +66,6 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
         parquet_data = BytesIO(response["Body"].read())
         dataframe = pd.read_parquet(parquet_data)
 
-        # Check if the DataFrame is empty
-        if dataframe.empty:
-            logging.warning(f"No data found in the Parquet file: {key}")
-            return
-
         # Insert data into the table
         columns = ",".join([f'"{col}"' for col in dataframe.columns])
         placeholders = ",".join(["%s"] * len(dataframe.columns))
