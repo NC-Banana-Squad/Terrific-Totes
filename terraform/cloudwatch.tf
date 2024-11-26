@@ -11,6 +11,12 @@ resource "aws_cloudwatch_log_group" "transform_log" {
   retention_in_days = 7
 }
 
+resource "aws_cloudwatch_log_group" "load_log" {
+  name              = "/aws/lambda/load"
+  retention_in_days = 7
+}
+
+
 #Created metric filter for "ERROR" in cw logs.
 resource "aws_cloudwatch_log_metric_filter" "extract_error_filter" {
   name           = "MyAppAccessCount"
@@ -36,9 +42,20 @@ resource "aws_cloudwatch_log_metric_filter" "transform_error_filter" {
   }
 }
 
+resource "aws_cloudwatch_log_metric_filter" "load_error_filter" {
+  name           = "LoadLambdaErrorFilter"
+  log_group_name = aws_cloudwatch_log_group.load_log.name
+  pattern        = "\"ERROR\""
+
+  metric_transformation {
+    name      = "LoadLambdaErrorCount"
+    namespace = "LambdaErrors"
+    value     = "1"
+  }
+}
 #Uses metric_filter to create cloudwatch alarm. Runs once every 2 mins for now.
-resource "aws_cloudwatch_metric_alarm" "combined_lambda_errors" {
-  alarm_name          = "CombinedLambdaErrors"
+resource "aws_cloudwatch_metric_alarm" "extract_errors" {
+  alarm_name          = "ExtractLambdaErrors"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
   metric_name         = "Errors"
@@ -48,6 +65,36 @@ resource "aws_cloudwatch_metric_alarm" "combined_lambda_errors" {
   threshold           = 1
   alarm_actions       = [aws_sns_topic.alert_sre.arn]
   dimensions = {
-    "FunctionName" : "extract,transform" #watch out if this syntax actually works
+    "FunctionName" = "extract"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "transform_errors" {
+  alarm_name          = "TransformLambdaErrors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 120
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_actions       = [aws_sns_topic.alert_sre.arn]
+  dimensions = {
+    "FunctionName" = "transform"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "load_errors" {
+  alarm_name          = "LoadLambdaErrors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 120
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_actions       = [aws_sns_topic.alert_sre.arn]
+  dimensions = {
+    "FunctionName" = "load"
   }
 }

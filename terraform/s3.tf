@@ -43,6 +43,12 @@ resource "aws_s3_object" "extract_layer_code" {
   source = "${path.module}/../extract_layer.zip"
 
 }
+#Upload transform function to code S3
+resource "aws_s3_object" "transform_lambda_code" {
+  bucket = aws_s3_bucket.code_bucket.bucket
+  key    = "transform_lambda_function.zip"
+  source = "${path.module}/../transform_function.zip"
+}
 
 #Create bucket notification when object is created in s3 
 resource "aws_s3_bucket_notification" "bucket_notification" {
@@ -51,6 +57,8 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   lambda_function {
     lambda_function_arn = aws_lambda_function.transform.arn
     events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "reports/"
+    filter_suffix       = "success.json"
   }
 }
 #Allow triggering lambda 
@@ -62,4 +70,21 @@ resource "aws_lambda_permission" "s3_trigger" {
   source_arn    = aws_s3_bucket.ingested_data_bucket.arn
 }
 
-  
+resource "aws_s3_bucket_notification" "processed_bucket_notification" {
+  bucket = aws_s3_bucket.processed_data_bucket.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.load.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+  depends_on = [aws_lambda_permission.s3_load_trigger ]
+}
+#Allow triggering load lambda 
+resource "aws_lambda_permission" "s3_load_trigger" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.load.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.processed_data_bucket.arn
+}
+

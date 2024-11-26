@@ -9,6 +9,7 @@ from util_functions import (
     store_in_s3,
 )
 import logging
+import json
 
 data_bucket = "banana-squad-ingested-data"
 code_bucket = "banana-squad-code"
@@ -17,8 +18,8 @@ logging.basicConfig(
     level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-def initial_extract(s3_client, conn):
 
+def initial_extract(s3_client, conn):
     """
     Function to run an initial extract of all data currently in the ToteSys database and stores in an S3 bucket.
     - runs query to find all table names in db
@@ -37,7 +38,7 @@ def initial_extract(s3_client, conn):
     query = conn.run(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != '_prisma_migrations'"
     )
-
+    extracted_tables = []
     """Query each table to extract all information it contains"""
     for table in query:
 
@@ -48,10 +49,10 @@ def initial_extract(s3_client, conn):
         if rows:
             csv_buffer = format_to_csv(rows, columns)
             store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
+            extracted_tables.append(file_name)
 
-    return {"result": "Success"}
+    return extracted_tables
 
-    return {"result": f"Object successfully created in {data_bucket} bucket"}
 
 def continuous_extract(s3_client, conn):
     """
@@ -70,41 +71,29 @@ def continuous_extract(s3_client, conn):
         Returns: string declaring success or failure of upload to S3
     """
 
-    """
-    Function to run an extract of recently added data in the ToteSys db and stores in an S3 bucket.
-    - reads timestamp stored in last_extracted.txt
-    - runs db query to get all table names from db
-    - runs a db query to select all new data added since timestamp
-    - creates file name with create_file_name util function
-    - converts data into csv format
-    - stores csv file in S3 bucket
-
-        Parameters:
-            s3_client: a low-level interface for interacting with S3 buckets
-            conn: a connection to the ToteSys database
-        
-        Returns: string declaring success or failure of upload to S3
-    """
-
     response = s3_client.get_object(Bucket=code_bucket, Key="last_extracted.txt")
     readable_content = response["Body"].read().decode("utf-8")
     last_extracted_datetime = datetime.fromisoformat(readable_content)
     query = conn.run(
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != '_prisma_migrations'"
     )
-
+    updated_tables = []
     for table in query:
         file_name = create_file_name(table[0])
         rows = conn.run(
             f"SELECT * FROM {table[0]} WHERE created_at > '{last_extracted_datetime}'"
         )
+        print(f"Rows for table {table[0]}: {rows}")
         columns = [col["name"] for col in conn.columns]
 
         if rows:
             csv_buffer = format_to_csv(rows, columns)
             store_in_s3(s3_client, csv_buffer, data_bucket, file_name)
+            updated_tables.append(file_name)
 
-    return {"result": "Success"}
+    print(f"Returning {updated_tables}")
+    return updated_tables
+
 
 def lambda_handler(event, context):
     """
@@ -119,21 +108,6 @@ def lambda_handler(event, context):
             s3_client: a low-level interface for interacting with S3 buckets
             conn: a connection to the ToteSys database
 
-        Returns: string declaring success or failure
-    """
-
-    """
-    Function contains logic to extract data from ToteSys database based on whether an initial extract has taken place or not.
-    - creates an S3 client to interact with S3 bucket.
-    - creates a connection to the ToteSys database
-    - checks whether a 'last_extracted.txt' exists in AWS and invokes either 'initial_extract' or 'continuous_extract' accordingly
-    - creates (after initial_extract) OR updates (after continuous_extract)a file called 'last_extracted.txt' and uploads to S3
-    - closes connection
-
-        Parameters:
-            s3_client: a low-level interface for interacting with S3 buckets
-            conn: a connection to the ToteSys database
-        
         Returns: string declaring success or failure
     """
 
@@ -155,16 +129,39 @@ def lambda_handler(event, context):
     if "Contents" in response and any(
         obj["Key"] == "last_extracted.txt" for obj in response["Contents"]
     ):
-        continuous_extract(s3_client, conn)
+        result = continuous_extract(s3_client, conn)
+        extraction_type = "Continuous"
 
     else:
-        initial_extract(s3_client, conn)
+        result = initial_extract(s3_client, conn)
+        extraction_type = "Initial"
 
-    try:        
+    try:
         last_extracted = datetime.now().isoformat().replace("T", " ")
         s3_client.put_object(
             Body=last_extracted, Bucket=code_bucket, Key="last_extracted.txt"
         )
+
+        report = {
+            "status": "Success",
+            "extraction_type": extraction_type,
+            "timestamp": last_extracted,
+            "updated_tables": result,
+        }
+
+        report_file_name = (
+            f"reports/{extraction_type}_extract_{last_extracted}_success.json"
+        )
+        s3_client.put_object(
+            Body=json.dumps(report, indent=4),
+            Bucket=data_bucket,
+            Key=report_file_name,
+        )
+
+        return {
+            "result": "Success",
+            "report_file": f"s3://{code_bucket}/{report_file_name}",
+        }
     except ClientError as e:
         logging.error(f"Error updating last_extracted.txt: {e}")
         return {"result": "Failure", "error": "Error updating last_extracted.txt"}
@@ -173,7 +170,5 @@ def lambda_handler(event, context):
         logging.error(f"Unexpected error: {e}")
         return {"result": "Failure", "error": "Unexpected error"}
 
-    finally:
+    finally:    
         conn.close()
-
-    return {"result": "Success"}

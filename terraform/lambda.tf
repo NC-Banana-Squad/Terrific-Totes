@@ -31,7 +31,8 @@ resource "aws_lambda_function" "extract" {
   source_code_hash = data.archive_file.extract_lambda.output_base64sha256
   runtime          = var.python_runtime
   layers           = [aws_lambda_layer_version.dependency_layer.arn]
-  timeout          = 20
+  timeout          = 120
+  depends_on       = [aws_lambda_layer_version.dependency_layer]
 }
 
 data "archive_file" "transform_lambda" {
@@ -57,6 +58,40 @@ resource "aws_lambda_function" "transform" {
   handler          = "transform.lambda_handler"
   source_code_hash = data.archive_file.transform_lambda.output_base64sha256
   runtime          = var.python_runtime
-  layers           = [aws_lambda_layer_version.dependency_layer.arn]
-  timeout          = 20
+  layers           = [
+    "arn:aws:lambda:eu-west-2:336392948345:layer:AWSSDKPandas-Python312:14"  # Directly referencing the ARN of the layer
+  ]
+  timeout          = 120
+
+}
+
+data "archive_file" "load_lambda" {
+  type             = "zip"
+  output_file_mode = "0666"
+
+  source {
+    content  = file("${path.module}/../src/load/load.py")
+    filename = "load.py"
+  }
+  source {
+    content  = file("${path.module}/../src/load/load_utils.py")
+    filename = "load_utils.py"
+  } 
+
+  output_path = "${path.module}/../load_function.zip"
+}
+
+resource "aws_lambda_function" "load" {
+  filename         = "${path.module}/../load_function.zip"
+  function_name    = "load"
+  role             = aws_iam_role.load_lambda_role.arn
+  handler          = "load.lambda_handler"
+  source_code_hash = data.archive_file.load_lambda.output_base64sha256
+  runtime          = var.python_runtime
+  layers           = [
+    aws_lambda_layer_version.dependency_layer.arn,
+    "arn:aws:lambda:eu-west-2:336392948345:layer:AWSSDKPandas-Python312:14" 
+  ]
+  timeout          = 120
+
 }

@@ -125,4 +125,5 @@ def create_table(dataframe, table_name, conn):
     );
     """
     conn.run_ddl(create_table_query)
+
     logging.info(f"Table {table_name} created successfully.")

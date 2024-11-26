@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 import pytest
 from unittest.mock import patch, MagicMock
 
+
 @mock_aws
 def test_store_in_s3_succesfully_uploads():
     """
@@ -33,6 +34,7 @@ def test_store_in_s3_succesfully_uploads():
 
     assert content == csv_content
 
+
 @mock_aws
 def test_store_in_s3_no_such_bucket():
     """
@@ -56,6 +58,7 @@ def test_store_in_s3_no_such_bucket():
         store_in_s3(mock_s3_client, csv_buffer, bucket_name, file_name)
 
     assert err_info.value.response["Error"]["Code"] == "NoSuchBucket"
+
 
 @mock_aws
 def test_store_in_s3_access_denied():

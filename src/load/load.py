@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 def lambda_handler(event, context):
     """
     Lambda function to load processed data from S3 into the data warehouse.
+
     Triggered by S3 Event Notifications.
     """
     s3_client = create_s3_client()
