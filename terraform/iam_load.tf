@@ -48,6 +48,11 @@ resource "aws_iam_policy" "load_lambda_policy" {
         Effect = "Allow",
         Resource = "arn:aws:sns:eu-west-2:418295700587:alert-sre"
       },
+      {
+        Action = ["secretsmanager:GetSecretValue"],
+        Effect = "Allow",
+        Resource = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:datawarehouse_credentials*"
+      }
     ]
   })
 }
