@@ -27,19 +27,17 @@ def lambda_handler(event, context):
         # Get database connection
         conn = connect()
 
-        # Loop through all records in the event
-        for record in event["Records"]:
-            # Extract bucket name and object key
-            bucket_name = record["s3"]["bucket"]["name"]
-            object_key = record["s3"]["object"]["key"]
+        # Extract bucket name and object key
+        bucket_name = record["s3"]["bucket"]["name"]
+        object_key = record["s3"]["object"]["key"]
             
-            logging.info(f"Triggered for file: {object_key} in bucket: {bucket_name}")
+        logging.info(f"Triggered for file: {object_key} in bucket: {bucket_name}")
             
-            # Determine table name (assuming part of key path)
-            table_name = object_key.split("/")[0]
+        # Determine table name (assuming part of key path)
+        table_name = object_key.split("/")[0]
 
-            # Load the data into the table
-            load_parquet(s3_client, bucket_name, object_key, table_name, conn)
+        # Load the data into the table
+        load_parquet(s3_client, bucket_name, object_key, table_name, conn)
 
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
