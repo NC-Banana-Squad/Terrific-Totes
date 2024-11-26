@@ -5,6 +5,7 @@ import json
 import pandas as pd
 import logging
 import os
+from botocore.exceptions import ClientError
 
 # Constants
 PROCESSED_BUCKET = "banana-squad-processed-data"
@@ -130,7 +131,7 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
             raise FileNotFoundError(f"The key '{key}' does not exist in bucket '{bucket_name}'.")
         else:
             raise
-        
+
     except Exception as e:
         logging.error(f"Error loading data into {table_name}: {e}")
         raise
