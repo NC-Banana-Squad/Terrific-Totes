@@ -88,19 +88,11 @@ def create_s3_client():
 
 
 def load_parquet(s3_client, bucket_name, key, table_name, conn):
-    """
-    Loads a Parquet file from S3 into the target table in the data warehouse.
-
-    Parameters:
-        s3_client: An initialized boto3 S3 client.
-        bucket_name (str): Name of the S3 bucket.
-        key (str): Key of the Parquet file in the S3 bucket.
-        table_name (str): Name of the target table in the data warehouse.
-        conn: A pg8000.native.Connection object for executing SQL.
-    """
+    """Loads a Parquet file from S3 into the target table in the data warehouse."""
     try:
-        # Fetch the Parquet file from S3
         logging.info(f"Fetching file from bucket={bucket_name}, key={key}")
+
+        # Fetch the Parquet file from S3
         response = s3_client.get_object(Bucket=bucket_name, Key=key)
         parquet_data = BytesIO(response["Body"].read())
         dataframe = pd.read_parquet(parquet_data)
@@ -120,18 +112,17 @@ def load_parquet(s3_client, bucket_name, key, table_name, conn):
         data = [tuple(row) for _, row in dataframe.iterrows()]
         logging.info(f"Preparing to insert {len(data)} rows into {schema_qualified_table_name}")
 
-        # Execute the batch insert using pg8000.native.Connection
+        # Execute the batch insert row by row
         for row in data:
-            conn.run(insert_query, row)
+            conn.run(insert_query, *row)
 
-        logging.info(f"Data loaded successfully into {table_name}.")
+        logging.info(f"Data loaded successfully into {schema_qualified_table_name}.")
     except ClientError as e:
         if e.response['Error']['Code'] == 'NoSuchKey':
             logging.error(f"Key {key} not found in bucket {bucket_name}.")
             raise FileNotFoundError(f"The key '{key}' does not exist in bucket '{bucket_name}'.")
         else:
             raise
-
     except Exception as e:
         logging.error(f"Error loading data into {table_name}: {e}")
         raise
