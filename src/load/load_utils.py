@@ -39,7 +39,7 @@ def connect():
     Returns:
         a connection to data warehouse
     """
-    secret_name = "database_credentials"
+    secret_name = "datawarehouse_credentials"
     secret = get_secret(secret_name)
 
     user = secret["load_user"]
@@ -49,7 +49,7 @@ def connect():
     port = secret["load_port"]
 
     return Connection(
-        user=user, database=database, password=password, host=host, port=load_port
+        user=user, database=database, password=password, host=host, port=port
     )
 
 def create_s3_client():
