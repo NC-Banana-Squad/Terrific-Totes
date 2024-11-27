@@ -1,5 +1,5 @@
 import pandas as pd
-
+import uuid
 
 def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
@@ -21,7 +21,7 @@ def fact_sales_order(df):
         df["created_at"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce"
     )
     df["created_date"] = df["created_at"].dt.date
-    df["created_time"] = df["created_at"].dt.time
+    df["created_time"] = df["created_at"].dt.time   
     df["last_updated"] = df["last_updated"].apply(
         lambda x: x if "." in x else x + ".000000"
     )
