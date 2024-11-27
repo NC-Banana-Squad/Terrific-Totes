@@ -59,6 +59,18 @@ resource "aws_iam_policy" "transform_lambda_policy" {
         Action = ["sns:Publish"],
         Effect = "Allow",
         Resource = "arn:aws:sns:eu-west-2:418295700587:alert-sre"
+      },
+      {
+        Action = ["secretsmanager:GetSecretValue"],
+        Effect = "Allow",
+        Resource = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:datawarehouse_credentials*"
+      },
+      {
+        Action = [
+          "rds-db:connect"
+          ],
+        Effect = "Allow",
+        Resource = "arn:aws:rds:eu-west-2:418295700587:db:postgres"
       }
     ]
   })

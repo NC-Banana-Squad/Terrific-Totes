@@ -3,8 +3,12 @@ import boto3
 import io
 import urllib.parse
 import json
+import logging
 from transform_utils import fact_sales_order, dim_staff, dim_counterparty, dim_location, dim_currency, dim_date, dim_design
 
+# Set up logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def get_data_frame(s3_client, bucket, key):
     """Fetches and returns a DataFrame from an S3 bucket."""
@@ -22,7 +26,10 @@ def lambda_handler(event, context):
 
     # Extract bucket and key from the event
     bucket = event['Records'][0]['s3']['bucket']['name']
-    key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
+    key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']
+    ['key'], encoding='utf-8')
+    print(key)
+    logging.info(f"Fetching object from bucket: {bucket}, key: {key}")
 
     # Load the JSON content from the S3 object
     obj = s3_client.get_object(Bucket=bucket, Key=key)
