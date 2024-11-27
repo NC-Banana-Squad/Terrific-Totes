@@ -5,6 +5,12 @@ def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
+    # Fill missing values with pd.NA
+    df.fillna(value=pd.NA, inplace=True)
+     # Add sales_record_id as the primary key
+    df["sales_record_id"] = [str(uuid.uuid4()) for _ in range(len(df))]
+    # Rename staff_id to sales_staff_id
+    df.rename(columns={"staff_id": "sales_staff_id"}, inplace=True)
     # created_at and last_updated columns have both the date and time in the column.
     # These both need to be split out for the fact table
     # this is needed for the sales_order split. But working on error fix
@@ -16,7 +22,6 @@ def fact_sales_order(df):
     )
     df["created_date"] = df["created_at"].dt.date
     df["created_time"] = df["created_at"].dt.time
-
     df["last_updated"] = df["last_updated"].apply(
         lambda x: x if "." in x else x + ".000000"
     )
@@ -25,7 +30,6 @@ def fact_sales_order(df):
     )
     df["last_updated_date"] = df["last_updated"].dt.date
     df["last_updated_time"] = df["last_updated"].dt.time
-
     df.drop(columns=["created_at", "last_updated"], inplace=True)
     return df
 
