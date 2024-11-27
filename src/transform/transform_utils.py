@@ -72,12 +72,13 @@ def table_has_data(conn):
     result = conn.run(query)
     print(result)
     logger.info(result)
-    conn.close()
     return result[0][0]  # Returns True if rows exist, False otherwise
 
 def get_current_max_id(conn):
     query = "SELECT MAX(sales_record_id) FROM fact_sales_order"
     result = conn.run(query)
+    print(result)
+    logger.info(result)
     conn.close()
     return result[0][0] if result[0][0] is not None else 0
 
@@ -94,7 +95,8 @@ def fact_sales_order(df):
         df["sales_record_id"] = range(current_max_id, current_max_id + len(df) + 1)
     
     else:
-        df["sales_record_id"] = range(1, len(df) + 1)    
+        df["sales_record_id"] = range(1, len(df) + 1)
+        conn.close()  
 
     # Fill missing values with pd.NA
     df.fillna(value=pd.NA, inplace=True)
