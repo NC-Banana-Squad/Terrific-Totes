@@ -107,7 +107,7 @@ def dim_counterparty(df1, df2):
 
 def dim_currency(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
-    Should return transformed dataframe to be used by Lambda Handler.
+    Returns cleaned, normalised and transformed dataframe to be used by Lambda Handler.
 
     Takes dataframe with:
         # currency_id
@@ -124,15 +124,17 @@ def dim_currency(df):
     currency_map = {
         "GBP": "British Pound Sterling",
         "USD": "United States Dollar",
-        "EUR": "Euro",
+        "EUR": "Euro"
     }
 
-    # Maps 'currency_code' to 'currency_name' using currency_map
-    df["currency_name"] = df["currency_code"].map(currency_map)
-
-    df.drop(columns=["created_at", "last_updated"], inplace=True)
-
-    return df
+    df['currency_id'] = df['currency_id'].astype(int)
+    df['currency_code'] = df['currency_code'].str.strip().str.upper()
+    df['currency_name'] = df['currency_code'].map(currency_map)
+    df['currency_name'].fillna("Unknown Currency", inplace=True)
+    
+    dim_currency_df = df[['currency_id', 'currency_code', 'currency_name']]
+    
+    return dim_currency_df
 
 
 def dim_date(start="2022-01-01", end="2024-12-31"):
