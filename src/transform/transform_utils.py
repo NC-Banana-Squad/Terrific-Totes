@@ -67,14 +67,18 @@ def connect():
         raise RuntimeError(f"Error connecting to database: {e}")
     
 
-def table_has_data(connection):
+def table_has_data(conn):
     query = "SELECT EXISTS (SELECT 1 FROM fact_sales_order LIMIT 1)"
-    result = connection.run(query)
+    result = conn.run(query)
+    print(result)
+    logger.info(result)
+    conn.close()
     return result[0][0]  # Returns True if rows exist, False otherwise
 
-def get_current_max_id(connection):
+def get_current_max_id(conn):
     query = "SELECT MAX(sales_record_id) FROM fact_sales_order"
-    result = connection.run(query)
+    result = conn.run(query)
+    conn.close()
     return result[0][0] if result[0][0] is not None else 0
 
 def fact_sales_order(df):
