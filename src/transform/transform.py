@@ -87,5 +87,4 @@ def lambda_handler(event, context):
         s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
         print(f"Processed and uploaded dim_date table: {output_path}")
 
-    conn.close()
     return "Transformation completed"

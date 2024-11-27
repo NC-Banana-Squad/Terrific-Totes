@@ -10,12 +10,6 @@ import pg8000.native
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Function to fetch the current max sales_record_id from RDS
-def get_current_max_id(connection, table_name):
-    query = f"SELECT MAX(sales_record_id) FROM {table_name}"
-    result = connection.run(query)
-    return result[0][0] if result[0][0] is not None else 0
-
 # Utility: Get Secret
 def get_secret(secret_name, region_name="eu-west-2"):
     """
@@ -79,7 +73,6 @@ def get_current_max_id(conn):
     result = conn.run(query)
     print(result)
     logger.info(result)
-    conn.close()
     return result[0][0] if result[0][0] is not None else 0
 
 def fact_sales_order(df):
@@ -91,12 +84,13 @@ def fact_sales_order(df):
     conn = connect()
 
     if table_has_data(conn):
-        current_max_id = get_current_max_id(conn) # = 10
-        df["sales_record_id"] = range(current_max_id, current_max_id + len(df) + 1)
+        current_max_id = get_current_max_id(conn) # = 11373
+        df["sales_record_id"] = range(current_max_id + 1, current_max_id + len(df) + 1)
     
     else:
         df["sales_record_id"] = range(1, len(df) + 1)
-        conn.close()  
+    
+    conn.close()
 
     # Fill missing values with pd.NA
     df.fillna(value=pd.NA, inplace=True)
