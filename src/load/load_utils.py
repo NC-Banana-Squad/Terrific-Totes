@@ -98,14 +98,13 @@ def insert_data_to_table(conn, table_name, df):
             columns = ", ".join(df.columns)
             placeholders = ", ".join(["%s"] * len(df.columns))
 
-            # # Use ON CONFLICT to handle duplicates
-            # update_clause = ", ".join([f"{col} = EXCLUDED.{col}" for col in df.columns if col != "date_id"])
-            # query = f"""
-            #     INSERT INTO {table_name} ({columns})
-            #     VALUES ({placeholders})
-            #     ON CONFLICT (date_id) DO UPDATE
-            #     SET {update_clause}
-            # """
+            # Use ON CONFLICT to handle duplicates
+            update_clause = ", ".join([f"{col} = EXCLUDED.{col}" for col in df.columns if col != "date_id"])
+            query = f"""
+                INSERT INTO {table_name} ({columns})
+                VALUES ({placeholders})
+                SET {update_clause}
+            """
 
             for row in rows:
                 cur.execute(query, tuple(row))
