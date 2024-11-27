@@ -68,7 +68,7 @@ def connect():
     
 
 def table_has_data(connection):
-    query = "SELECT * FROM fact_sales_order LIMIT 1"
+    query = "SELECT EXISTS (SELECT 1 FROM fact_sales_order LIMIT 1)"
     result = connection.run(query)
     return result[0][0]  # Returns True if rows exist, False otherwise
 
