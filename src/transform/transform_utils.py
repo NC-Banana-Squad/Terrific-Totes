@@ -58,8 +58,7 @@ def connect():
         return conn
     except Exception as e:
         logger.error(f"Error connecting to database: {e}")
-        raise RuntimeError(f"Error connecting to database: {e}")
-    
+        raise RuntimeError(f"Error connecting to database: {e}")    
 
 def table_has_data(conn):
     query = "SELECT EXISTS (SELECT 1 FROM fact_sales_order LIMIT 1)"
@@ -118,7 +117,6 @@ def fact_sales_order(df):
     df["last_updated_time"] = df["last_updated"].dt.time
     df.drop(columns=["created_at", "last_updated"], inplace=True)
     return df
-
 
 def dim_counterparty(df1, df2):
     """
@@ -194,7 +192,6 @@ def dim_counterparty(df1, df2):
 
     return dim_counterparty
 
-
 def dim_currency(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Returns cleaned, normalised and transformed dataframe to be used by Lambda Handler.
@@ -225,7 +222,6 @@ def dim_currency(df):
     dim_currency_df = df[['currency_id', 'currency_code', 'currency_name']]
     
     return dim_currency_df
-
 
 def dim_date(start="2022-01-01", end="2024-12-31"):
     """Creates calendar table for star schema.
@@ -261,7 +257,6 @@ def dim_date(start="2022-01-01", end="2024-12-31"):
 
     return df
 
-
 def dim_design(df):
     """
     Transforms the design table into the dim_design table for the star schema.
@@ -282,7 +277,6 @@ def dim_design(df):
     dim_design = dim_design.sort_values(by="design_id").reset_index(drop=True)
 
     return dim_design
-
 
 def dim_location(df):
     """Takes the only the address dataframe from the transform.py file read from s3 trigger.
@@ -309,7 +303,6 @@ def dim_location(df):
     dim_location = dim_location.drop(columns=["created_at", "last_updated"])
 
     return dim_location
-
 
 def dim_staff(df1, df2):
     """

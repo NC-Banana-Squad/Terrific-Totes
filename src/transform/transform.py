@@ -26,7 +26,10 @@ def lambda_handler(event, context):
 
     # Extract bucket and key from the event
     bucket = event['Records'][0]['s3']['bucket']['name']
-    key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
+    key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']
+    ['key'], encoding='utf-8')
+    print(key)
+    logging.info(f"Fetching object from bucket: {bucket}, key: {key}")
 
     # Load the JSON content from the S3 object
     obj = s3_client.get_object(Bucket=bucket, Key=key)
