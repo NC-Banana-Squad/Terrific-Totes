@@ -1,14 +1,100 @@
+import boto3
+import pg8000
 import pandas as pd
-import uuid
+import logging
+import json
+import io
+import pg8000.native
+
+# Set up logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Function to fetch the current max sales_record_id from RDS
+def get_current_max_id(connection, table_name):
+    query = f"SELECT MAX(sales_record_id) FROM {table_name}"
+    result = connection.run(query)
+    return result[0][0] if result[0][0] is not None else 0
+
+# Utility: Get Secret
+def get_secret(secret_name, region_name="eu-west-2"):
+    """
+    Retrieves a secret from AWS Secrets Manager.
+
+    Args:
+        secret_name (str): The name of the secret in Secrets Manager
+        region_name (str): The AWS region where the Secrets Manager is hosted
+    Returns:
+        dict: A dictionary of the secret values.
+    """
+    logger.info("Fetching database secrets...")
+    try:
+        client = boto3.client("secretsmanager", region_name=region_name)
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+
+        if "SecretString" in get_secret_value_response:
+            secret = get_secret_value_response["SecretString"]
+            return json.loads(secret)
+        else:
+            raise ValueError("Secret is stored as binary; function expects JSON.")
+    except Exception as e:
+        logger.error(f"Failed to retrieve secret: {e}")
+        raise RuntimeError(f"Failed to retrieve secret: {e}")
+
+# Utility: Create Database Connection
+def connect():
+    """
+    Establish a connection to the ToteSys database.
+    Credentials are retrieved from AWS Secrets Manager by invoking get_secret().
+    Returns:
+        pg8000.Connection: A connection to the data warehouse
+    """
+    logger.info("Establishing database connection...")
+    secret_name = "datawarehouse_credentials"
+    secret = get_secret(secret_name)
+
+    try:
+        conn = pg8000.connect(
+            user=secret["user"],
+            database=secret["database"],
+            password=secret["password"],
+            host=secret["host"],
+            port=secret["port"]
+        )
+        return conn
+    except Exception as e:
+        logger.error(f"Error connecting to database: {e}")
+        raise RuntimeError(f"Error connecting to database: {e}")
+    
+
+def table_has_data(connection):
+    query = "SELECT * FROM fact_sales_order LIMIT 1"
+    result = connection.run(query)
+    return result[0][0]  # Returns True if rows exist, False otherwise
+
+def get_current_max_id(connection):
+    query = "SELECT MAX(sales_record_id) FROM fact_sales_order"
+    result = connection.run(query)
+    return result[0][0] if result[0][0] is not None else 0
 
 def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
+
+    # Connect to RDS datawarehouse
+    conn = connect()
+
+    if table_has_data(conn):
+        current_max_id = get_current_max_id(conn) # = 10
+        df["sales_record_id"] = range(current_max_id, current_max_id + len(df) + 1)
+    
+    else:
+        df["sales_record_id"] = range(1, len(df) + 1)    
+
     # Fill missing values with pd.NA
     df.fillna(value=pd.NA, inplace=True)
-     # Add sales_record_id as the primary key
-    df["sales_record_id"] = [str(uuid.uuid4()) for _ in range(len(df))]
+
     # Rename staff_id to sales_staff_id
     df.rename(columns={"staff_id": "sales_staff_id"}, inplace=True)
     # created_at and last_updated columns have both the date and time in the column.
