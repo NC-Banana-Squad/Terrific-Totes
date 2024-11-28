@@ -6,11 +6,9 @@ import json
 import io
 import pg8000.native
 
-# Set up logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Utility: Get Secret
 def get_secret(secret_name, region_name="eu-west-2"):
     """
     Retrieves a secret from AWS Secrets Manager.
