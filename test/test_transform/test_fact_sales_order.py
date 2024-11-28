@@ -55,13 +55,13 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import pandas as pd
-from transform import fact_sales_order  # Replace 'your_module' with the actual module name
+from transform_utils import fact_sales_order  # Replace 'your_module' with the actual module name
 
 
 class TestFactSalesOrder(unittest.TestCase):
-    @patch("transform.connect")
-    @patch("transform.table_has_data")
-    @patch("transform.get_current_max_id")
+    @patch("transform_utils.connect")
+    @patch("transform_utils.table_has_data")
+    @patch("transform_utils.get_current_max_id")
     def test_no_existing_data(self, mock_get_current_max_id, mock_table_has_data, mock_connect):
         # Arrange
         mock_table_has_data.return_value = False
@@ -87,9 +87,9 @@ class TestFactSalesOrder(unittest.TestCase):
         self.assertIn("last_updated_date", result_df.columns)
         self.assertNotIn("created_at", result_df.columns)
     
-    @patch("transform.connect")
-    @patch("transform.table_has_data")
-    @patch("transform.get_current_max_id")
+    @patch("transform_utils.connect")
+    @patch("transform_utils.table_has_data")
+    @patch("transform_utils.get_current_max_id")
     def test_existing_data(self, mock_get_current_max_id, mock_table_has_data, mock_connect):
         # Arrange
         mock_table_has_data.return_value = True
@@ -115,9 +115,9 @@ class TestFactSalesOrder(unittest.TestCase):
         self.assertIn("last_updated_time", result_df.columns)
         self.assertNotIn("last_updated", result_df.columns)
     
-    @patch("transform.connect")
-    @patch("transform.table_has_data")
-    @patch("transform.get_current_max_id")
+    @patch("transform_utils.connect")
+    @patch("transform_utils.table_has_data")
+    @patch("transform_utils.get_current_max_id")
     def test_handling_missing_values(self, mock_get_current_max_id, mock_table_has_data, mock_connect):
         # Arrange
         mock_table_has_data.return_value = True
@@ -139,9 +139,9 @@ class TestFactSalesOrder(unittest.TestCase):
         self.assertEqual(result_df["sales_record_id"].iloc[0], 6)
         self.assertTrue(pd.isna(result_df["sales_staff_id"].iloc[1]))
     
-    @patch("transform.connect")
-    @patch("transform.table_has_data")
-    @patch("transform.get_current_max_id")
+    @patch("transform_utils.connect")
+    @patch("transform_utils.table_has_data")
+    @patch("transform_utils.get_current_max_id")
     def test_invalid_timestamps(self, mock_get_current_max_id, mock_table_has_data, mock_connect):
         # Arrange
         mock_table_has_data.return_value = False
@@ -161,9 +161,9 @@ class TestFactSalesOrder(unittest.TestCase):
         self.assertTrue(pd.isna(result_df["created_date"].iloc[0]))
         self.assertTrue(pd.isna(result_df["last_updated_date"].iloc[0]))
     
-    @patch("transform.connect")
-    @patch("transform.table_has_data")
-    @patch("transform.get_current_max_id")
+    @patch("transform_utils.connect")
+    @patch("transform_utils.table_has_data")
+    @patch("transform_utils.get_current_max_id")
     def test_preserve_nan_values(self, mock_get_current_max_id, mock_table_has_data, mock_connect):
         # Arrange
         mock_table_has_data.return_value = True
