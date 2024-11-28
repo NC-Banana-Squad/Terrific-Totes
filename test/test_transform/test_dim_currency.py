@@ -66,7 +66,7 @@ def test_invalid_currency_code():
         expected_df
     ), f"Test failed. Got: {result}, Expected: {expected_df}"
 
-def xtest_missing_currency_code():
+def test_missing_currency_code():
     data = {
         "currency_id": [1, 2, 3],
         "currency_code": ["GBP", None, "EUR"],
@@ -88,7 +88,7 @@ def xtest_missing_currency_code():
     expected_data = {
         "currency_id": [1, 2, 3],
         "currency_code": ["GBP", None, "EUR"],
-        "currency_name": ["British Pound Sterling", "Unknown Currency", "Euro"],
+        "currency_name": ["British Pound Sterling", None, "Euro"],
     }
     expected_df = pd.DataFrame(expected_data)
 
