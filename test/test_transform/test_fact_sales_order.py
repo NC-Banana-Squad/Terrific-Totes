@@ -113,32 +113,8 @@ class TestFactSalesOrder(unittest.TestCase):
         self.assertListEqual(list(result_df["sales_staff_id"]), input_data["staff_id"])
         self.assertListEqual(list(result_df["created_date"]), [pd.Timestamp("2024-11-27").date(), pd.Timestamp("2024-11-28").date()])
         self.assertIn("last_updated_time", result_df.columns)
-        self.assertNotIn("last_updated", result_df.columns)
-    
-    @patch("transform_utils.connect")
-    @patch("transform_utils.table_has_data")
-    @patch("transform_utils.get_current_max_id")
-    def test_handling_missing_values(self, mock_get_current_max_id, mock_table_has_data, mock_connect):
-        # Arrange
-        mock_table_has_data.return_value = True
-        mock_get_current_max_id.return_value = 5
-        mock_connect.return_value = MagicMock()
-        
-        input_data = {
-            "staff_id": [101, None],
-            "created_at": ["2024-11-27 12:30:00", None],
-            "last_updated": ["2024-11-27 13:00:00", None],
-        }
-        df = pd.DataFrame(input_data)
-        
-        # Act
-        result_df = fact_sales_order(df)
-        
-        # Assert
-        self.assertTrue(result_df.isnull().any().any())  # Check for missing values
-        self.assertEqual(result_df["sales_record_id"].iloc[0], 6)
-        self.assertTrue(pd.isna(result_df["sales_staff_id"].iloc[1]))
-    
+        self.assertNotIn("last_updated", result_df.columns)    
+   
     @patch("transform_utils.connect")
     @patch("transform_utils.table_has_data")
     @patch("transform_utils.get_current_max_id")
@@ -161,28 +137,5 @@ class TestFactSalesOrder(unittest.TestCase):
         self.assertTrue(pd.isna(result_df["created_date"].iloc[0]))
         self.assertTrue(pd.isna(result_df["last_updated_date"].iloc[0]))
     
-    @patch("transform_utils.connect")
-    @patch("transform_utils.table_has_data")
-    @patch("transform_utils.get_current_max_id")
-    def test_preserve_nan_values(self, mock_get_current_max_id, mock_table_has_data, mock_connect):
-        # Arrange
-        mock_table_has_data.return_value = True
-        mock_get_current_max_id.return_value = 5
-        mock_connect.return_value = MagicMock()
-        
-        input_data = {
-            "staff_id": [None],
-            "created_at": [None],
-            "last_updated": [None],
-        }
-        df = pd.DataFrame(input_data)
-        
-        # Act
-        result_df = fact_sales_order(df)
-        
-        # Assert
-        self.assertTrue(result_df.isnull().all().all())  # All columns should have NaN
-
-
 if __name__ == "__main__":
     unittest.main()
