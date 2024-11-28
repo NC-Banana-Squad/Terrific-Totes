@@ -11,8 +11,14 @@ from transform import lambda_handler, get_data_frame
 def s3_mock():
     with mock_aws():
         s3_client = boto3.client("s3", region_name="eu-west-2")
-        s3_client.create_bucket(Bucket="banana-squad-ingested-data")
-        s3_client.create_bucket(Bucket="banana-squad-processed-data")
+        s3_client.create_bucket(
+            Bucket="banana-squad-ingested-data",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"}
+        )
+        s3_client.create_bucket(
+            Bucket="banana-squad-processed-data",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"}
+        )
         yield s3_client
 
 @pytest.fixture
