@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import boto3
-from moto import mock_s3
+from moto import mock_aws
 import pandas as pd
 import json
 import io
@@ -9,7 +9,7 @@ from transform import lambda_handler, get_data_frame
 
 @pytest.fixture
 def s3_mock():
-    with mock_s3():
+    with mock_aws():
         s3_client = boto3.client("s3", region_name="eu-west-2")
         s3_client.create_bucket(Bucket="banana-squad-ingested-data")
         s3_client.create_bucket(Bucket="banana-squad-processed-data")
