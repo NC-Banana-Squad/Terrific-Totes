@@ -58,7 +58,7 @@ def test_invalid_currency_code():
     expected_data = {
         "currency_id": [1, 2, 3],
         "currency_code": ["GBP", "JPY", "EUR"],
-        "currency_name": ["British Pound Sterling", None, "Euro"],
+        "currency_name": ["British Pound Sterling", "Unknown Currency", "Euro"],
     }
     expected_df = pd.DataFrame(expected_data)
 
@@ -89,7 +89,7 @@ def test_missing_currency_code():
     expected_data = {
         "currency_id": [1, 2, 3],
         "currency_code": ["GBP", None, "EUR"],
-        "currency_name": ["British Pound Sterling", None, "Euro"],
+        "currency_name": ["British Pound Sterling", "Unknown Currency", "Euro"],
     }
     expected_df = pd.DataFrame(expected_data)
 
@@ -107,7 +107,11 @@ def test_empty_dataframe():
 
     expected_df = pd.DataFrame(
         columns=["currency_id", "currency_code", "currency_name"]
-    )
+    ).astype({"currency_id": "int64", "currency_code": "object", "currency_name": "object"})
+    
+    result.reset_index(drop=True, inplace=True)
+    expected_df.reset_index(drop=True, inplace=True)
+
 
     assert result.equals(
         expected_df

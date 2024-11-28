@@ -1,5 +1,78 @@
+import boto3
+import pg8000
 import pandas as pd
+import logging
+import json
+import io
+import pg8000.native
 
+# Set up logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Utility: Get Secret
+def get_secret(secret_name, region_name="eu-west-2"):
+    """
+    Retrieves a secret from AWS Secrets Manager.
+
+    Args:
+        secret_name (str): The name of the secret in Secrets Manager
+        region_name (str): The AWS region where the Secrets Manager is hosted
+    Returns:
+        dict: A dictionary of the secret values.
+    """
+    logger.info("Fetching database secrets...")
+    try:
+        client = boto3.client("secretsmanager", region_name=region_name)
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+
+        if "SecretString" in get_secret_value_response:
+            secret = get_secret_value_response["SecretString"]
+            return json.loads(secret)
+        else:
+            raise ValueError("Secret is stored as binary; function expects JSON.")
+    except Exception as e:
+        logger.error(f"Failed to retrieve secret: {e}")
+        raise RuntimeError(f"Failed to retrieve secret: {e}")
+
+# Utility: Create Database Connection
+def connect():
+    """
+    Establish a connection to the ToteSys database.
+    Credentials are retrieved from AWS Secrets Manager by invoking get_secret().
+    Returns:
+        pg8000.Connection: A connection to the data warehouse
+    """
+    logger.info("Establishing database connection...")
+    secret_name = "datawarehouse_credentials"
+    secret = get_secret(secret_name)
+
+    try:
+        conn = pg8000.connect(
+            user=secret["user"],
+            database=secret["database"],
+            password=secret["password"],
+            host=secret["host"],
+            port=secret["port"]
+        )
+        return conn
+    except Exception as e:
+        logger.error(f"Error connecting to database: {e}")
+        raise RuntimeError(f"Error connecting to database: {e}")    
+
+def table_has_data(conn):
+    query = "SELECT EXISTS (SELECT 1 FROM fact_sales_order LIMIT 1)"
+    result = conn.run(query)
+    print(result)
+    logger.info(result)
+    return result[0][0]  # Returns True if rows exist, False otherwise
+
+def get_current_max_id(conn):
+    query = "SELECT MAX(sales_record_id) FROM fact_sales_order"
+    result = conn.run(query)
+    print(result)
+    logger.info(result)
+    return result[0][0] if result[0][0] is not None else 0
 
 def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
@@ -12,8 +85,7 @@ def fact_sales_order(df):
         df["created_at"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce"
     )
     df["created_date"] = df["created_at"].dt.date
-    df["created_time"] = df["created_at"].dt.time
-
+    df["created_time"] = df["created_at"].dt.time   
     df["last_updated"] = df["last_updated"].apply(
         lambda x: x if "." in x else x + ".000000"
     )
@@ -22,10 +94,8 @@ def fact_sales_order(df):
     )
     df["last_updated_date"] = df["last_updated"].dt.date
     df["last_updated_time"] = df["last_updated"].dt.time
-
     df.drop(columns=["created_at", "last_updated"], inplace=True)
     return df
-
 
 def dim_counterparty(df1, df2):
     """
@@ -99,10 +169,9 @@ def dim_counterparty(df1, df2):
 
     return dim_counterparty
 
-
 def dim_currency(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
-    Should return transformed dataframe to be used by Lambda Handler.
+    Returns cleaned, normalised and transformed dataframe to be used by Lambda Handler.
 
     Takes dataframe with:
         # currency_id
@@ -119,7 +188,7 @@ def dim_currency(df):
     currency_map = {
         "GBP": "British Pound Sterling",
         "USD": "United States Dollar",
-        "EUR": "Euro",
+        "EUR": "Euro"
     }
 
     df["currency_name"] = df["currency_code"].map(currency_map)
@@ -163,7 +232,6 @@ def dim_date(start="2022-01-01", end="2024-12-31"):
 
     return df
 
-
 def dim_design(df):
     """
     Transforms the design table into the dim_design table for the star schema.
@@ -181,7 +249,6 @@ def dim_design(df):
     dim_design = dim_design.sort_values(by="design_id").reset_index(drop=True)
 
     return dim_design
-
 
 def dim_location(df):
     """Takes the only the address dataframe from the transform.py file read from s3 trigger.
@@ -205,7 +272,6 @@ def dim_location(df):
     dim_location = dim_location.drop(columns=["created_at", "last_updated"])
 
     return dim_location
-
 
 def dim_staff(df1, df2):
     """
