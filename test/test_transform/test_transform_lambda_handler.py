@@ -36,9 +36,9 @@ def fake_event():
 
 @pytest.fixture
 def mock_transform_utils():
-    with patch("your_module.fact_sales_order", return_value=pd.DataFrame({"col": [1]})) as fact_sales_order:
-        with patch("your_module.dim_date", return_value=pd.DataFrame({"date_col": [1]})) as dim_date:
-            with patch("your_module.dim_counterparty", return_value=pd.DataFrame({"col": [2]})) as dim_counterparty:
+    with patch("transform.fact_sales_order", return_value=pd.DataFrame({"col": [1]})) as fact_sales_order:
+        with patch("transform.dim_date", return_value=pd.DataFrame({"date_col": [1]})) as dim_date:
+            with patch("transform.dim_counterparty", return_value=pd.DataFrame({"col": [2]})) as dim_counterparty:
                 yield {
                     "fact_sales_order": fact_sales_order,
                     "dim_date": dim_date,
