@@ -75,6 +75,10 @@ def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
+
+    if 'staff_id' in df.columns:
+        df.rename(columns={'staff_id': 'sales_staff_id'}, inplace=True)
+        
     df["created_at"] = df["created_at"].apply(
         lambda x: x if "." in x else x + ".000000"
     )
