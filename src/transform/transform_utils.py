@@ -71,14 +71,53 @@ def get_current_max_id(conn):
     logger.info(result)
     return result[0][0] if result[0][0] is not None else 0
 
+# def fact_sales_order(df):
+#     """Takes the dataframe from the transform.py file read from s3 trigger.
+#     Should return transformed dataframe to be used by Lambda Handler.
+#     """
+
+#     if 'staff_id' in df.columns:
+#         df.rename(columns={'staff_id': 'sales_staff_id'}, inplace=True)
+
+#     df["created_at"] = df["created_at"].apply(
+#         lambda x: x if "." in x else x + ".000000"
+#     )
+#     df["created_at"] = pd.to_datetime(
+#         df["created_at"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce"
+#     )
+#     df["created_date"] = df["created_at"].dt.date
+#     df["created_time"] = df["created_at"].dt.time   
+#     df["last_updated"] = df["last_updated"].apply(
+#         lambda x: x if "." in x else x + ".000000"
+#     )
+#     df["last_updated"] = pd.to_datetime(
+#         df["last_updated"], format="%Y-%m-%d %H:%M:%S.%f", errors="coerce"
+#     )
+#     df["last_updated_date"] = df["last_updated"].dt.date
+#     df["last_updated_time"] = df["last_updated"].dt.time
+#     df.drop(columns=["created_at", "last_updated"], inplace=True)
+#     return df
+
 def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
 
-    if 'staff_id' in df.columns:
-        df.rename(columns={'staff_id': 'sales_staff_id'}, inplace=True)
-        
+    conn = connect()
+
+    if table_has_data(conn):
+        current_max_id = get_current_max_id(conn)
+        df["sales_record_id"] = range(current_max_id + 1, current_max_id + len(df) + 1)
+    
+    else:
+        df["sales_record_id"] = range(1, len(df) + 1)
+    
+    conn.close()
+
+    df.fillna(value=pd.NA, inplace=True)
+
+    df.rename(columns={"staff_id": "sales_staff_id"}, inplace=True)
+
     df["created_at"] = df["created_at"].apply(
         lambda x: x if "." in x else x + ".000000"
     )
