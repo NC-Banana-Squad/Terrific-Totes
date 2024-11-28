@@ -6,7 +6,7 @@ from load import load_parquet_from_s3
 
 class TestLoadParquetFromS3(unittest.TestCase):
     @patch("load.pd.read_parquet")
-    @patch("load.s3_client.get_object")
+    @patch("s3_client.get_object")
     @patch("load.logger")
     def test_load_parquet_success(self, mock_logger, mock_get_object, mock_read_parquet):
         mock_s3_client = MagicMock()
@@ -21,7 +21,7 @@ class TestLoadParquetFromS3(unittest.TestCase):
         mock_read_parquet.assert_called_once()
         self.assertTrue(isinstance(result, pd.DataFrame))
 
-    @patch("load.s3_client.get_object")
+    @patch("s3_client.get_object")
     @patch("load.logger")
     def test_load_parquet_no_such_key(self, mock_logger, mock_get_object):
         mock_s3_client = MagicMock()
@@ -32,7 +32,7 @@ class TestLoadParquetFromS3(unittest.TestCase):
 
         mock_logger.error.assert_called_once_with("Key test-key not found in bucket test-bucket.")
 
-    @patch("load.s3_client.get_object")
+    @patch("s3_client.get_object")
     @patch("load.logger")
     def test_load_parquet_general_exception(self, mock_logger, mock_get_object):
         mock_s3_client = MagicMock()
