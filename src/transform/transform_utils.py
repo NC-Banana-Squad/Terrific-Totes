@@ -33,7 +33,6 @@ def get_secret(secret_name, region_name="eu-west-2"):
         logger.error(f"Failed to retrieve secret: {e}")
         raise RuntimeError(f"Failed to retrieve secret: {e}")
 
-# Utility: Create Database Connection
 def connect():
     """
     Establish a connection to the ToteSys database.
@@ -63,7 +62,7 @@ def table_has_data(conn):
     result = conn.run(query)
     print(result)
     logger.info(result)
-    return result[0][0]  # Returns True if rows exist, False otherwise
+    return result[0][0]
 
 def get_current_max_id(conn):
     query = "SELECT MAX(sales_record_id) FROM fact_sales_order"
