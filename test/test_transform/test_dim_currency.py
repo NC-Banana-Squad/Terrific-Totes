@@ -58,7 +58,7 @@ def test_invalid_currency_code():
     expected_data = {
         "currency_id": [1, 2, 3],
         "currency_code": ["GBP", "JPY", "EUR"],
-        "currency_name": ["British Pound Sterling", "Unknown Currency", "Euro"],
+        "currency_name": ["British Pound Sterling", None, "Euro"],
     }
     expected_df = pd.DataFrame(expected_data)
 
