@@ -5,7 +5,7 @@ from moto import mock_s3
 import pandas as pd
 import json
 import io
-from your_module import lambda_handler, get_data_frame
+from transform import lambda_handler, get_data_frame
 
 @pytest.fixture
 def s3_mock():
