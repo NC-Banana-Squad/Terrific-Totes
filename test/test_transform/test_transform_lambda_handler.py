@@ -59,26 +59,6 @@ def test_get_data_frame_failure(s3_mock):
     df = get_data_frame(s3_mock, "banana-squad-ingested-data", "nonexistent.csv")
     assert df is None
 
-def xtest_lambda_handler(s3_mock, fake_event, mock_transform_utils):
-    data = {"updated_tables": ["sales_order.csv"]}
-    s3_mock.put_object(
-        Bucket="banana-squad-ingested-data",
-        Key="updated_tables.json",
-        Body=json.dumps(data),
-    )
-    s3_mock.put_object(
-        Bucket="banana-squad-ingested-data",
-        Key="sales_order.csv",
-        Body="col1,col2\n1,2\n3,4",
-    )
-    response = lambda_handler(fake_event, None)
-    assert response == "Transformation completed"
-
-    processed_objects = s3_mock.list_objects(Bucket="banana-squad-processed-data")
-    processed_keys = {obj["Key"] for obj in processed_objects.get("Contents", [])}
-    assert "fact_sales_order/2024/11/25/15:00:00.00000.parquet" in processed_keys
-    assert "dim_date/2024/11/25/15:00:00.00000.parquet" in processed_keys
-
 def test_lambda_handler_missing_table(s3_mock, fake_event):
     data = {"updated_tables": ["nonexistent_table.csv"]}
     s3_mock.put_object(
@@ -88,3 +68,28 @@ def test_lambda_handler_missing_table(s3_mock, fake_event):
     )
     response = lambda_handler(fake_event, None)
     assert response == "Transformation completed"
+
+def test_lambda_handler(s3_mock, fake_event, mock_transform_utils):
+    mock_timestamp = "2024/11/25/15:00:00.00000"
+    with patch("transform.generate_timestamp", return_value=mock_timestamp):
+        data = {"updated_tables": ["sales_order.csv"]}
+        s3_mock.put_object(
+            Bucket="banana-squad-ingested-data",
+            Key="updated_tables.json",
+            Body=json.dumps(data),
+        )
+        s3_mock.put_object(
+            Bucket="banana-squad-ingested-data",
+            Key="sales_order.csv",
+            Body="col1,col2\n1,2\n3,4",
+        )
+        
+        response = lambda_handler(fake_event, None)
+        
+        assert response == "Transformation completed"
+        
+        processed_objects = s3_mock.list_objects(Bucket="banana-squad-processed-data")
+        processed_keys = {obj["Key"] for obj in processed_objects.get("Contents", [])}
+        
+        assert f"fact_sales_order/{mock_timestamp}.parquet" in processed_keys
+        assert f"dim_date/{mock_timestamp}.parquet" in processed_keys
