@@ -97,7 +97,7 @@ def test_missing_currency_code():
     ), f"Test failed. Got: {result}, Expected: {expected_df}"
 
 
-def xtest_empty_dataframe():
+def test_empty_dataframe():
     df = pd.DataFrame(
         columns=["currency_id", "currency_code", "created_at", "last_updated"]
     )
@@ -106,11 +106,10 @@ def xtest_empty_dataframe():
 
     expected_df = pd.DataFrame(
         columns=["currency_id", "currency_code", "currency_name"]
-    ).astype({"currency_id": "int64", "currency_code": "object", "currency_name": "object"})
-    
+    )
+
     result.reset_index(drop=True, inplace=True)
     expected_df.reset_index(drop=True, inplace=True)
-
 
     assert result.equals(
         expected_df
