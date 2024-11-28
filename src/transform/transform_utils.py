@@ -5,9 +5,6 @@ def fact_sales_order(df):
     """Takes the dataframe from the transform.py file read from s3 trigger.
     Should return transformed dataframe to be used by Lambda Handler.
     """
-    # created_at and last_updated columns have both the date and time in the column.
-    # These both need to be split out for the fact table
-    # this is needed for the sales_order split. But working on error fix
     df["created_at"] = df["created_at"].apply(
         lambda x: x if "." in x else x + ".000000"
     )
@@ -72,12 +69,10 @@ def dim_counterparty(df1, df2):
         # counterparty_legal_phone_number
     """
 
-    # Perform an inner join on legal_address_id and address_id
     merged_df = pd.merge(
         df1, df2, left_on="legal_address_id", right_on="address_id", how="inner"
     )
 
-    # Select and rename the relevant columns
     dim_counterparty = merged_df[
         [
             "counterparty_id",
@@ -127,7 +122,6 @@ def dim_currency(df):
         "EUR": "Euro",
     }
 
-    # Maps 'currency_code' to 'currency_name' using currency_map
     df["currency_name"] = df["currency_code"].map(currency_map)
 
     df.drop(columns=["created_at", "last_updated"], inplace=True)
@@ -180,13 +174,10 @@ def dim_design(df):
     Returns:
         dim_design (pd.DataFrame): Transformed dim_design DataFrame.
     """
-    # Select relevant columns
     dim_design = df[["design_id", "design_name", "file_location", "file_name"]]
 
-    # Drop duplicates
     dim_design = dim_design.drop_duplicates(subset=["design_id"])
 
-    # Sorting is optional but recommended for consistent
     dim_design = dim_design.sort_values(by="design_id").reset_index(drop=True)
 
     return dim_design
@@ -197,7 +188,6 @@ def dim_location(df):
     Should return transformed dataframe to be used by Lambda Handler.
     """
 
-    # Rename columns
     rename_columns = {
         "address_id": "location_id",
         "address_line_1": "address_line_1",
@@ -210,10 +200,8 @@ def dim_location(df):
     }
     dim_location = df.rename(columns=rename_columns)
 
-    # Replace missing data with null (NaN)- panadas'standard for "null"
     dim_location = dim_location.fillna(value=pd.NA)
 
-    # Remove created_at and last_updated columns
     dim_location = dim_location.drop(columns=["created_at", "last_updated"])
 
     return dim_location
@@ -233,14 +221,12 @@ def dim_staff(df1, df2):
     staff_df = df1
     department_df = df2
 
-    # Merge staff with department to include department details
     dim_staff = staff_df.merge(
         department_df[["department_id", "department_name", "location"]],
         how="left",
         on="department_id",
     )
 
-    # Select relevant columns
     dim_staff = dim_staff[
         [
             "staff_id",
@@ -252,10 +238,8 @@ def dim_staff(df1, df2):
         ]
     ]
 
-    # Remove duplicates if any
     dim_staff = dim_staff.drop_duplicates()
 
-    # Sort for consistency and reset index
     dim_staff = dim_staff.sort_values(by="staff_id").reset_index(drop=True)
 
     return dim_staff

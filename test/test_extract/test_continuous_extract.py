@@ -3,29 +3,8 @@ from unittest.mock import MagicMock, patch
 from extract import continuous_extract
 from datetime import datetime
 
-"""
-Tests for the continuous_extract function.
-
-This module includes tests to validate the behavior of the continuous_extract 
-function under various scenarios, such as successful extraction, no new data, 
-database errors, and multiple table extractions.
-
-Fixtures:
-    - `mock_data`: Provides mock data used across tests.
-    - `mock_s3_client`: Mocks interactions with S3.
-    - `mock_db_connection`: Mocks interactions with the database.
-
-Each test uses mocked dependencies to isolate the functionality of 
-`continuous_extract` and ensures proper behavior of individual components.
-
-Modules tested:
-    - extract.continuous_extract
-"""
-
-
 @pytest.fixture
 def mock_data():
-    """Provide mock data for the tests."""
     return {
         "mock_table_data": [("table1",), ("table2",)],
         "mock_rows": [
@@ -39,7 +18,6 @@ def mock_data():
 
 @pytest.fixture
 def mock_s3_client(mock_data):
-    """Mock the S3 client."""
     mock_s3 = MagicMock()
     mock_s3.get_object.return_value = {
         "Body": MagicMock(
@@ -51,9 +29,7 @@ def mock_s3_client(mock_data):
 
 @pytest.fixture
 def mock_db_connection(mock_data):
-    """Mock the database connection."""
     mock_conn = MagicMock()
-    # Remove the default side_effect from the fixture
     mock_conn.columns = mock_data["mock_columns"]
     return mock_conn
 
@@ -69,37 +45,30 @@ def test_continuous_extract_successful(
     mock_db_connection,
     mock_data,
 ):
-    """Test successful extraction and storage of new data."""
-    # Set up side_effect specifically for this test
     mock_db_connection.run.side_effect = [
-        [("table1",)],  # First call - get table names (just one table for simplicity)
-        mock_data["mock_rows"],  # Second call - get rows for table1
+        [("table1",)],  
+        mock_data["mock_rows"],
     ]
 
     result = continuous_extract(mock_s3_client, mock_db_connection)
 
-    # Add debug print to see actual calls
     print("\nActual calls:")
     for call in mock_db_connection.run.mock_calls:
         print(f"Call: {call}")
 
-    # Verify database queries were made with more flexible datetime comparison
     assert mock_db_connection.run.call_count == 2
     first_call = mock_db_connection.run.mock_calls[0]
     second_call = mock_db_connection.run.mock_calls[1]
 
-    # Verify first call (getting table names)
     assert (
         first_call.args[0]
         == "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name != '_prisma_migrations'"
     )
 
-    # Verify second call (getting rows) starts and ends correctly
     second_call_query = second_call.args[0]
     assert second_call_query.startswith("SELECT * FROM table1 WHERE created_at > '")
     assert second_call_query.endswith("'")
 
-    # Verify the rest of the process
     mock_create_file_name.assert_called_with("table1")
     mock_format_to_csv.assert_called_with(
         mock_data["mock_rows"], ["id", "name", "created_at"]
@@ -123,11 +92,9 @@ def test_continuous_extract_no_new_data(
     mock_db_connection,
     mock_data,
 ):
-    """Test when no new data is available since last extraction."""
-    # Set up side_effect specifically for this test
     mock_db_connection.run.side_effect = [
-        [("table1",)],  # First call - get table names (just one table)
-        [],  # Second call - no new rows
+        [("table1",)],  
+        [],
     ]
 
     result = continuous_extract(mock_s3_client, mock_db_connection)
@@ -147,10 +114,9 @@ def test_continuous_extract_database_error(
     mock_db_connection,
     mock_data,
 ):
-    """Test handling of database query errors."""
     mock_db_connection.run.side_effect = [
-        [("table1",)],  # First call - get table names
-        Exception("Database error"),  # Second call - raise exception
+        [("table1",)],  
+        Exception("Database error"),
     ]
 
     with pytest.raises(Exception, match="Database error"):
@@ -171,11 +137,10 @@ def test_continuous_extract_multiple_tables(
     mock_db_connection,
     mock_data,
 ):
-    """Test extraction from multiple tables with new data."""
     mock_db_connection.run.side_effect = [
-        [("table1",), ("table2",)],  # First call - get table names (two tables)
-        mock_data["mock_rows"],  # Second call - rows for table1
-        mock_data["mock_rows"],  # Third call - rows for table2
+        [("table1",), ("table2",)], 
+        mock_data["mock_rows"],
+        mock_data["mock_rows"],
     ]
 
     result = continuous_extract(mock_s3_client, mock_db_connection)

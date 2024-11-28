@@ -1,9 +1,7 @@
 resource "aws_cloudwatch_event_rule" "scheduler" {
-  # this should set up a scheduler that will trigger the Lambda every 20 minutes
-  # Careful! other things may need to be set up as well
   name                = "every-ten-minutes"
   description         = "runs-every-10-minutes"
-  schedule_expression = "rate(5 minutes)"
+  schedule_expression = "rate(20 minutes)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda-target-20-minutes" {

@@ -5,7 +5,6 @@ from extract import initial_extract
 
 @pytest.fixture
 def mock_data():
-    """Provide mock data for the tests."""
     return {
         "mock_table_data": [("table1",)],
         "mock_rows": [
@@ -18,11 +17,10 @@ def mock_data():
 
 @pytest.fixture
 def mock_db_connection(mock_data):
-    """Mock the database connection."""
     mock_conn = MagicMock()
     mock_conn.run.side_effect = [
-        mock_data["mock_table_data"],  # Response for table names query
-        mock_data["mock_rows"],  # Response for data query
+        mock_data["mock_table_data"],
+        mock_data["mock_rows"],
     ]
     mock_conn.columns = mock_data["mock_columns"]
     return mock_conn
@@ -30,7 +28,6 @@ def mock_db_connection(mock_data):
 
 @pytest.fixture
 def mock_s3_client():
-    """Mock the S3 client."""
     return MagicMock()
 
 
@@ -45,13 +42,10 @@ def test_initial_extract_successful_extraction(
     mock_db_connection,
     mock_data,
 ):
-    # Mock the store_in_s3 function
     mock_store_in_s3.return_value = True
 
-    # Call the function to test
     result = initial_extract(mock_s3_client, mock_db_connection)
 
-    # Assertions
     assert result == ["mocked_file_name.csv"]
     mock_create_file_name.assert_called_once_with("table1")
     mock_format_to_csv.assert_called_once_with(
@@ -86,10 +80,9 @@ def test_initial_extract_no_rows_in_table(
     mock_db_connection,
     mock_data,
 ):
-    # Modify mock to return empty rows
     mock_db_connection.run.side_effect = [
-        mock_data["mock_table_data"],  # Table names
-        [],  # No rows for the table
+        mock_data["mock_table_data"],
+        [],
     ]
 
     result = initial_extract(mock_s3_client, mock_db_connection)
@@ -111,7 +104,6 @@ def test_initial_extract_multiple_tables(
     mock_db_connection,
     mock_data,
 ):
-    # Modify mock to return multiple tables
     mock_data["mock_table_data"] = [("table1",), ("table2",)]
     mock_db_connection.run.side_effect = [
         mock_data["mock_table_data"],  # Table names

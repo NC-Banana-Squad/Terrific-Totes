@@ -4,8 +4,7 @@ import pytest
 
 
 def test_return_expected_data():
-    # Mock input DataFrame
-    # Arrange
+
     input_data = pd.DataFrame(
         {
             "address_id": [1],
@@ -34,23 +33,16 @@ def test_return_expected_data():
         }
     )
 
-    # Action
     result = dim_location(input_data)
 
-    # Assert
-    # Ensures the column names are the same
     assert list(result.columns) == list(expected_data.columns)
-    # Ensure dataframe values are equal
     assert (result.values == expected_data.values).all()
-    # Ensure the number of rows and columns are as expected
     assert result.shape == expected_data.shape
-    # Ensure result matches expected_data
     assert result.equals(expected_data)
 
 
 def test_return_expected_data_with_missing_values():
 
-    # Arrange
     input_data = pd.DataFrame(
         {
             "address_id": [1],
@@ -79,9 +71,6 @@ def test_return_expected_data_with_missing_values():
         }
     )
 
-    # Action
     result = dim_location(input_data)
 
-    # Assert
-    # Ensure result matches expected_data
     assert result.equals(expected_data)

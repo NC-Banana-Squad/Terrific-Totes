@@ -14,27 +14,20 @@ from datetime import datetime
 def test_continuous_extract_called_when_last_extracted_exists(
     mock_continuous, mock_initial, mock_connect, mock_s3_client
 ):
-    # Mock the S3 client
     mock_s3 = MagicMock()
-    # Simulate the presence of 'last_extracted.txt'
     mock_s3.list_objects.return_value = {"Contents": [{"Key": "last_extracted.txt"}]}
     mock_s3_client.return_value = mock_s3
 
-    # Mock the database connection
     mock_conn = MagicMock()
     mock_connect.return_value = mock_conn
 
-    # Mock continuous_extract to return a serializable result
     mock_continuous.return_value = {"updated_tables": ["table1", "table2"]}
 
-    # Call the lambda handler
     result = lambda_handler({}, {})
 
-    # Assert that continuous_extract was called, and initial_extract was not
     mock_continuous.assert_called_once_with(mock_s3, mock_conn)
     mock_initial.assert_not_called()
 
-    # Verify the result is a success
     assert result["result"] == "Success"
 
 
@@ -46,29 +39,22 @@ def test_continuous_extract_called_when_last_extracted_exists(
 def test_initial_extract_called_when_last_extracted_missing(
     mock_continuous, mock_initial, mock_connect, mock_s3_client
 ):
-    # Mock the S3 client
     mock_s3 = MagicMock()
-    # Simulate the absence of 'last_extracted.txt'
     mock_s3.list_objects.return_value = (
         {}
-    )  # No 'Contents' key means no files in the bucket
+    )
     mock_s3_client.return_value = mock_s3
 
-    # Mock the database connection
     mock_conn = MagicMock()
     mock_connect.return_value = mock_conn
 
-    # Mock initial_extract to return a serializable result
     mock_initial.return_value = {"updated_tables": ["table1", "table2"]}
 
-    # Call the lambda handler
     result = lambda_handler({}, {})
 
-    # Assert that initial_extract was called, and continuous_extract was not
     mock_initial.assert_called_once_with(mock_s3, mock_conn)
     mock_continuous.assert_not_called()
 
-    # Verify the result is a success
     assert result["result"] == "Success"
 
 

@@ -3,7 +3,7 @@ name: CI-Pipeline
 on:
   push:
     branches:
-      - load
+      - main
 
 jobs:
   run-tests:

@@ -4,7 +4,6 @@ from transform_utils import dim_currency
 
 
 def test_currency_names():
-    # Data to simulate csv file
     data = {
         "currency_id": [1, 2, 3],
         "currency_code": ["GBP", "USD", "EUR"],
@@ -20,20 +19,16 @@ def test_currency_names():
         ],
     }
 
-    # Convert data to dataframe
     df = pd.DataFrame(data)
 
-    # Call currency() using dataframe
     result = dim_currency(df)
 
-    # Expected output
     expected_data = {
         "currency_id": [1, 2, 3],
         "currency_code": ["GBP", "USD", "EUR"],
         "currency_name": ["British Pound Sterling", "United States Dollar", "Euro"],
     }
 
-    # Convery expected output to dataframe
     expected_df = pd.DataFrame(expected_data)
 
     assert result.equals(

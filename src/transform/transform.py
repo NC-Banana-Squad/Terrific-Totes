@@ -18,13 +18,23 @@ def get_data_frame(s3_client, bucket, key):
 
 
 def lambda_handler(event, context):
+
+    """
+    Function contains logic to transform data from Ingested Bucket from csv to parquet
+    Function modifies structure of data to match format of the star schema
+
+        Parameters:
+            triggered upon addition of a report to the Ingested Bucket
+            event contains information about all recently updated tables
+
+        Returns: string declaring success or failure
+    """
+
     s3_client = boto3.client("s3", region_name='eu-west-2')
 
-    # Extract bucket and key from the event
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'], encoding='utf-8')
 
-    # Load the JSON content from the S3 object
     obj = s3_client.get_object(Bucket=bucket, Key=key)
     success_data = json.loads(obj['Body'].read().decode('utf-8'))
 
@@ -38,7 +48,6 @@ def lambda_handler(event, context):
         dim_staff: ["staff", "department"]
     }
 
-    # Load DataFrames and handle errors
     data_frames = {}
     for table in updated_tables:
         df = get_data_frame(s3_client, bucket, table)
@@ -48,8 +57,7 @@ def lambda_handler(event, context):
         else:
             print(f"Skipping table '{table}' due to load error.")
 
-    # Apply transformations
-    processed_files = set()  # Track files to prevent duplicates
+    processed_files = set()
     for transform_function, sources in transformations.items():
         relevant_data_frames = [
             data_frames[source] for source in sources if source in data_frames
@@ -57,21 +65,18 @@ def lambda_handler(event, context):
         if relevant_data_frames:
             result_table = transform_function(*relevant_data_frames)
 
-            # Generate a unique directory name
             year, month, day, file_name = table.split('/')[1:5]
             output_path = f"{transform_function.__name__}/{year}/{month}/{day}/{file_name[:-4]}.parquet"
 
             if output_path not in processed_files:
                 processed_files.add(output_path)
 
-                # Write the transformed DataFrame to the processed bucket
                 parquet_buffer = io.BytesIO()
                 result_table.to_parquet(parquet_buffer, index=False)
 
                 s3_client.put_object(Body=parquet_buffer.getvalue(), Bucket="banana-squad-processed-data", Key=output_path)
                 print(f"Processed and uploaded file: {output_path}")
 
-    # Check for dim_date table existence and process it
     response = s3_client.list_objects(Bucket="banana-squad-processed-data")
     if "Contents" in response and not any(
         obj["Key"] == "dim_date/2024/11/25/15:00:00.00000.parquet" for obj in response["Contents"]

@@ -2,9 +2,7 @@ import pytest
 import pandas as pd
 from transform_utils import dim_counterparty
 
-#:)
 def test_counterparty_basic():
-    # Input dataframes
     df1 = pd.DataFrame(
         {
             "counterparty_id": [1],
@@ -31,7 +29,6 @@ def test_counterparty_basic():
         }
     )
 
-    # Expected output
     expected = pd.DataFrame(
         {
             "counterparty_id": [1],
@@ -46,15 +43,12 @@ def test_counterparty_basic():
         }
     )
 
-    # Run the function
     result = dim_counterparty(df1, df2)
 
-    # Assert the result matches the expected output
     pd.testing.assert_frame_equal(result, expected)
 
 
 def test_counterparty_no_match():
-    # Input dataframes with no matching legal_address_id and address_id
     df1 = pd.DataFrame(
         {
             "counterparty_id": [1],
@@ -82,7 +76,6 @@ def test_counterparty_no_match():
         }
     )
 
-    # Expected output is an empty dataframe with the correct columns
     expected = pd.DataFrame(
         {
             "counterparty_id": pd.Series([], dtype="int64"),
@@ -97,8 +90,6 @@ def test_counterparty_no_match():
         }
     )
 
-    # Run the function
     result = dim_counterparty(df1, df2)
 
-    # Assert the result matches the expected output
     pd.testing.assert_frame_equal(result, expected)

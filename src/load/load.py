@@ -9,18 +9,23 @@ from load_utils import (
 from botocore.exceptions import ClientError
 from urllib.parse import unquote
 
-# Constants for environment variables
 S3_BUCKET = "banana-squad-processed-data"
 
-# Set up logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    """AWS Lambda handler function."""
+    """
+    Function contains logic to load data from Processed Bucket into RDS Postgres database
+    Logs errors to CloudWatch for ease of maintenance
+
+        Parameters:
+            triggered upon addition of a parquet file to the Processed Bucket
+            event contains information about added parquet file
+
+    """    
     logger.info("Lambda function triggered.")
     try:
-        # Extract key from the event
         s3_key = event["Records"][0]["s3"]["object"]["key"]
         decoded_key = unquote(s3_key)
         logger.info(f"Processing S3 key: {decoded_key}")
@@ -59,55 +64,3 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(f"Error in lambda_handler: {e}")
         raise
-
-# from botocore.exceptions import NoCredentialsError, ClientError
-# from load_utils import (
-#     connect,
-#     create_s3_client,
-#     load_parquet,
-# )
-# import logging
-
-# # Constants
-# PROCESSED_BUCKET = "banana-squad-processed-data"
-
-# # Configure logging
-# logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-# def lambda_handler(event, context):
-#     """
-#     Lambda function to load processed data from S3 into the data warehouse.
-
-#     Triggered by S3 Event Notifications.
-#     """
-#     s3_client = create_s3_client()
-#     conn = None
-
-#     try:
-#         # Get database connection
-#         conn = connect()
-
-#         # Extract bucket name and object key
-#         bucket_name = event["Records"][0]["s3"]["bucket"]["name"]
-#         object_key = event["Records"][0]["s3"]["object"]["key"]
-#         print(object_key)
-            
-#         logging.info(f"Triggered for file: {object_key} in bucket: {bucket_name}")
-            
-#         # Determine table name (assuming part of key path)
-#         table_name = object_key.split("/")[0]
-
-#         rds_table_name = f"project_team_5.{table_name}"
-
-#         # Load the data into the table
-#         load_parquet(s3_client, bucket_name, object_key, rds_table_name, conn)
-
-#     except Exception as e:
-#         logging.error(f"Unexpected error: {e}")
-#         return {"result": "Failure", "error": str(e)}
-
-#     finally:
-#         if conn:
-#             conn.close()
-
-#     return {"result": "Success"}
