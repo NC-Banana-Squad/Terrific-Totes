@@ -6,7 +6,6 @@ import json
 import logging
 from transform_utils import fact_sales_order, dim_staff, dim_counterparty, dim_location, dim_currency, dim_date, dim_design
 
-# Set up logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
